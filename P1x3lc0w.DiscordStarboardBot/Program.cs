@@ -31,8 +31,8 @@ namespace P1x3lc0w.DiscordStarboardBot
                 byte[] iv = Convert.FromBase64String(@"fClcUe7OWzqU8dIOt1u60g==");
 #else
                 Console.WriteLine("RELEASE");
-                byte[] token_enc = Convert.FromBase64String(@"EEE0HVsLKps2/zIJV1LKcyrUarOsIMo+oAi+MYXgtaf5j9+oO5jfzktoiMTVHo0NoIZACUyCOKMBjvei5vNURw==");
-                byte[] iv = Convert.FromBase64String(@"jdDXe6W0n/Ml6R3KNZ094Q==");
+                byte[] token_enc = Convert.FromBase64String(@"CBFtbeHilk2H1EDrcMst17Fu/07yIZXrmwv2w6Lowu1X9u0pz3UrtbSOQIkFv3eJ+vlOAIb4cug6VoljLvYFlQ==");
+                byte[] iv = Convert.FromBase64String(@"w8Ky3A53CBv/wFLkATG4Lw==");
 #endif
                 byte[] aes_key = Convert.FromBase64String(File.ReadAllText(".key"));
 
