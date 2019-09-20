@@ -1,26 +1,47 @@
-﻿using Discord.WebSocket;
+﻿using Discord;
+using Discord.Commands;
+using Discord.WebSocket;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Globalization;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace P1x3lc0w.DiscordStarboardBot
 {
-    class Program
+    public class Program
     {
-        static DiscordShardedClient sc;
-
+        public static DiscordSocketClient sc;
+        public static CommandHandler handler;
         static void Main(string[] args)
         {
             CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
             CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
-            sc = new DiscordShardedClient();
+            sc = new DiscordSocketClient();
 
-            sc.ShardReady += Sc_ShardReady;
-            sc.LoggedIn += Sc_LoggedIn;
-            sc.Log += Sc_Log;
-            sc.MessageReceived += Sc_MessageReceived;
+            sc.Ready += Events.Sc_Ready;
+            sc.LoggedIn += Events.Sc_LoggedIn;
+            sc.Log += Events.Sc_Log;
+            sc.MessageReceived += Events.Sc_MessageReceived;
+            sc.ReactionAdded += Events.Sc_ReactionAdded;
+            sc.GuildAvailable += Events.Sc_GuildAvailable;
+            sc.ReactionRemoved += Events.Sc_ReactionRemoved;
+
+            ServiceCollection services = new ServiceCollection();
+
+            services.AddSingleton(sc)
+            .AddSingleton<CommandHandler>()
+            .AddSingleton(new CommandService(new CommandServiceConfig
+            {                                       // Add the command service to the collection
+                LogLevel = LogSeverity.Verbose,     // Tell the logger to give Verbose amount of info
+                DefaultRunMode = RunMode.Async,     // Force all commands to run async by default
+            }));
+
+            var provider = services.BuildServiceProvider();
+            _ = provider.GetRequiredService<CommandHandler>().InstallCommandsAsync();
+
 
             string token = "";
 
@@ -59,45 +80,6 @@ namespace P1x3lc0w.DiscordStarboardBot
 
             Console.WriteLine("Goodbye!");
             Environment.Exit(0);
-        }
-
-        private static Task Sc_MessageReceived(SocketMessage arg)
-        {
-
-            return Task.CompletedTask;
-        }
-
-        private static Task Sc_ShardReady(DiscordSocketClient arg)
-        {
-            return Task.CompletedTask;
-        }
-
-        private static Task Sc_Log(Discord.LogMessage arg)
-        {
-            switch (arg.Severity)
-            {
-                case Discord.LogSeverity.Debug:
-                case Discord.LogSeverity.Verbose:
-                case Discord.LogSeverity.Info:
-                    Console.WriteLine("[" + arg.Severity.ToString() + "]" + arg.Message);
-                    break;
-
-                case Discord.LogSeverity.Error:
-                    Console.Error.WriteLine("[ERROR] " + arg.Message);
-                    break;
-
-                case Discord.LogSeverity.Critical:
-                    Console.Error.WriteLine("[CRITICAL] " + arg.Message);
-                    break;
-            }
-
-            return Task.CompletedTask;
-        }
-
-        private static Task Sc_LoggedIn()
-        {
-            sc.StartAsync();
-            return Task.CompletedTask;
         }
     }
 }
