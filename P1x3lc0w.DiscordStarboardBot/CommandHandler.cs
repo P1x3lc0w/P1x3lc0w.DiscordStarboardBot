@@ -1,9 +1,6 @@
 ﻿using Discord.Commands;
 using Discord.WebSocket;
-using System;
-using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace P1x3lc0w.DiscordStarboardBot
@@ -25,10 +22,10 @@ namespace P1x3lc0w.DiscordStarboardBot
             // Hook the MessageReceived event into our command handler
             _client.MessageReceived += HandleCommandAsync;
 
-            // Here we discover all of the command modules in the entry 
+            // Here we discover all of the command modules in the entry
             // assembly and load them. Starting from Discord.NET 2.0, a
             // service provider is required to be passed into the
-            // module registration method to inject the 
+            // module registration method to inject the
             // required dependencies.
             //
             // If you do not use Dependency Injection, pass null.

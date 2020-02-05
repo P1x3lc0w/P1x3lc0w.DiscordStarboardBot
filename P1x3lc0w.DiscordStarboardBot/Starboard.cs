@@ -2,12 +2,11 @@
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace P1x3lc0w.DiscordStarboardBot
 {
-    static class Starboard
+    internal static class Starboard
     {
         public static void UpdateStarCount(IUserMessage msg, int delta)
         {
@@ -17,12 +16,14 @@ namespace P1x3lc0w.DiscordStarboardBot
 
             lock (guildData)
             {
-
-
                 if (!guildData.messageData.ContainsKey(msg.Id))
                 {
-                    messageData = new MessageData() {
-                        created = msg.CreatedAt
+                    messageData = new MessageData()
+                    {
+                        created = msg.CreatedAt,
+                        userId = msg.Author.Id,
+                        isNsfw = (msg.Channel as ITextChannel).IsNsfw,
+                        channelId = msg.Channel.Id
                     };
                     guildData.messageData.Add(msg.Id, messageData);
                 }
@@ -30,7 +31,6 @@ namespace P1x3lc0w.DiscordStarboardBot
                 {
                     messageData = guildData.messageData[msg.Id];
                 }
-
             }
 
             lock (messageData)
@@ -64,10 +64,9 @@ namespace P1x3lc0w.DiscordStarboardBot
                         Task.Run(async () => messageData.starboardMessageId = await CreateStarboardMessage(guildData, msg, messageData));
                     }
                 }
-
             }
         }
-        
+
         public static Embed CreateEmbed(IUserMessage msg, MessageData data)
         {
             string avatarUrl = msg.Author.GetAvatarUrl() ?? msg.Author.GetDefaultAvatarUrl();
@@ -75,7 +74,6 @@ namespace P1x3lc0w.DiscordStarboardBot
             string jumpUrl = msg.GetJumpUrl();
 
             IEnumerator<IAttachment> enumerator = msg.Attachments.GetEnumerator();
-
 
             IAttachment attachment = null;
             string imageUrl = null;
@@ -127,7 +125,8 @@ namespace P1x3lc0w.DiscordStarboardBot
 
                 IUserMessage startboardMsg = await starboardChannel.GetMessageAsync(data.starboardMessageId) as IUserMessage;//SendMessageAsync(embed: CreateEmbed(msg, data));
 
-                await startboardMsg.ModifyAsync((prop) => {
+                await startboardMsg.ModifyAsync((prop) =>
+                {
                     prop.Embed = CreateEmbed(msg, data);
                 });
             }
@@ -136,12 +135,11 @@ namespace P1x3lc0w.DiscordStarboardBot
                 Console.Error.WriteLine($"Error while updating starboard message: {e.GetType().FullName}: {e.Message}");
             }
         }
+
         internal static async Task<ulong> CreateStarboardMessage(GuildData guildData, IUserMessage msg, MessageData data)
         {
             try
             {
-               
-
                 bool isNsfw = (msg.Channel as ITextChannel).IsNsfw;
 
                 IGuild guild = (msg.Channel as ITextChannel).Guild;

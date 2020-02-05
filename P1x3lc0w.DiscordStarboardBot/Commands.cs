@@ -1,11 +1,8 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -30,7 +27,6 @@ namespace P1x3lc0w.DiscordStarboardBot
             }
         }
 
-
         [Command("minStars")]
         [RequireUserPermission(Discord.GuildPermission.Administrator)]
         public async Task SetMinStars(uint minStars)
@@ -45,18 +41,18 @@ namespace P1x3lc0w.DiscordStarboardBot
         [RequireUserPermission(Discord.GuildPermission.Administrator)]
         public async Task Save()
         {
-            await File.WriteAllTextAsync("savedata.json", JsonConvert.SerializeObject(Data.BotData));
+            await Saving.SaveDataAsync(Data.BotData);
 
             await ReplyAsync($":white_check_mark: Saved!");
         }
 
         [Command("scan")]
         [RequireUserPermission(Discord.GuildPermission.Administrator)]
-        public async Task Scan(SocketTextChannel channel, string messageId) 
+        public async Task Scan(SocketTextChannel channel, string messageId)
         {
             GuildData guildData = Data.BotData.guildDictionary[Context.Guild.Id];
 
-            if(!ulong.TryParse(messageId, out ulong msgId))
+            if (!ulong.TryParse(messageId, out ulong msgId))
             {
                 await ReplyAsync(":x: Invalid message id");
                 return;
@@ -76,9 +72,9 @@ namespace P1x3lc0w.DiscordStarboardBot
                     currentStarCount = guildData.messageData[message.Id].stars;
                 }
 
-                foreach(KeyValuePair<IEmote, ReactionMetadata> keyValue in message.Reactions)
+                foreach (KeyValuePair<IEmote, ReactionMetadata> keyValue in message.Reactions)
                 {
-                    if(keyValue.Key.Name.Equals("⭐", StringComparison.InvariantCultureIgnoreCase))
+                    if (keyValue.Key.Name.Equals("⭐", StringComparison.InvariantCultureIgnoreCase))
                     {
                         int delta = keyValue.Value.ReactionCount - (int)currentStarCount;
                         if (await message.GetReactionUsersAsync(new Emoji("⭐"), Math.Min((int)guildData.requiredStarCount * 10, 100)).Any(users => users.Any(user => user.Id == message.Author.Id)))
@@ -92,8 +88,6 @@ namespace P1x3lc0w.DiscordStarboardBot
                 }
                 await ReplyAsync(":white_check_mark: Message Was Scanned!");
             }
-            
         }
-
     }
 }

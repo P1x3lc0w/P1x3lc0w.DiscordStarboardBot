@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
-using System.Text;
 
 namespace P1x3lc0w.DiscordStarboardBot
 {
-    static class Crypto
+    internal static class Crypto
     {
         static internal byte[] EncryptStringToBytes_Aes(string plainText, byte[] Key, byte[] IV)
         {
@@ -44,10 +42,8 @@ namespace P1x3lc0w.DiscordStarboardBot
                 }
             }
 
-
             // Return the encrypted bytes from the memory stream.
             return encrypted;
-
         }
 
         static internal string DecryptStringFromBytes_Aes(byte[] cipherText, byte[] Key, byte[] IV)
@@ -81,18 +77,15 @@ namespace P1x3lc0w.DiscordStarboardBot
                     {
                         using (StreamReader srDecrypt = new StreamReader(csDecrypt))
                         {
-
                             // Read the decrypted bytes from the decrypting stream
                             // and place them in a string.
                             plaintext = srDecrypt.ReadToEnd();
                         }
                     }
                 }
-
             }
 
             return plaintext;
-
         }
     }
 }

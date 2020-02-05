@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Globalization;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,8 +14,11 @@ namespace P1x3lc0w.DiscordStarboardBot
     {
         public static DiscordSocketClient sc;
         public static CommandHandler handler;
-        static void Main(string[] args)
+
+        private static void Main(string[] args)
         {
+            Task.Run(Data.LoadDataAsync);
+
             CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
             CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
             sc = new DiscordSocketClient();
@@ -28,6 +30,7 @@ namespace P1x3lc0w.DiscordStarboardBot
             sc.ReactionAdded += Events.Sc_ReactionAdded;
             sc.GuildAvailable += Events.Sc_GuildAvailable;
             sc.ReactionRemoved += Events.Sc_ReactionRemoved;
+            sc.GuildMemberUpdated += Events.Sc_GuildMemberUpdated;
 
             ServiceCollection services = new ServiceCollection();
 
@@ -41,7 +44,6 @@ namespace P1x3lc0w.DiscordStarboardBot
 
             var provider = services.BuildServiceProvider();
             _ = provider.GetRequiredService<CommandHandler>().InstallCommandsAsync();
-
 
             string token = "";
 
@@ -60,19 +62,17 @@ namespace P1x3lc0w.DiscordStarboardBot
                 token = Crypto.DecryptStringFromBytes_Aes(token_enc, aes_key, iv);
             }
 
-
             sc.LoginAsync(Discord.TokenType.Bot, token);
-
 
             Thread.Sleep(Timeout.Infinite);
         }
-
 
         internal static void Exit()
         {
             Console.WriteLine("Shutting Down....");
             Task.Run(ExitAsync);
         }
+
         private static async Task ExitAsync()
         {
             await sc.LogoutAsync();

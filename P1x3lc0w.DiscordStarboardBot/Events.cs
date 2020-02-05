@@ -1,13 +1,11 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace P1x3lc0w.DiscordStarboardBot
 {
-    class Events
+    internal class Events
     {
         internal static Task Sc_MessageReceived(SocketMessage arg)
         {
@@ -37,6 +35,11 @@ namespace P1x3lc0w.DiscordStarboardBot
             return Task.CompletedTask;
         }
 
+        internal static Task Sc_GuildMemberUpdated(SocketGuildUser arg1, SocketGuildUser arg2) 
+        {
+            Data.BotData.guildDictionary[arg2.Guild.Id].UpdateMessagesByUser(arg2.Guild, arg2.Id);
+            return Task.CompletedTask;
+        }
         internal static Task Sc_Ready() => Task.CompletedTask;
 
         internal static async Task Sc_ReactionRemoved(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
@@ -56,9 +59,9 @@ namespace P1x3lc0w.DiscordStarboardBot
         {
             IUserMessage msg = arg1.Value ?? await arg1.DownloadAsync();
 
-            if(arg3.Emote.Name.Equals("⭐", StringComparison.InvariantCultureIgnoreCase))
+            if (arg3.Emote.Name.Equals("⭐", StringComparison.InvariantCultureIgnoreCase))
             {
-                if(msg.Author.Id == arg3.User.Value.Id)
+                if (msg.Author.Id == arg3.User.Value.Id)
                 {
                     await msg.RemoveReactionAsync(arg3.Emote, arg3.User.Value);
                 }
@@ -73,7 +76,7 @@ namespace P1x3lc0w.DiscordStarboardBot
         {
             Console.WriteLine($"Guild Available: {arg.Name} ({arg.Id})");
 
-            if(!Data.BotData.guildDictionary.ContainsKey(arg.Id))
+            if (!Data.BotData.guildDictionary.ContainsKey(arg.Id))
             {
                 Console.WriteLine($"Createing Guild Data for: {arg.Name} ({arg.Id})");
 
@@ -86,6 +89,16 @@ namespace P1x3lc0w.DiscordStarboardBot
         internal static Task Sc_LoggedIn()
         {
             Program.sc.StartAsync();
+
+            Task.Run(async () =>
+            {
+                while (true)
+                {
+                    await Saving.SaveDataAsync(Data.BotData);
+                    await Task.Delay(new TimeSpan(0, 2, 0, 0, 0));
+                }
+            });
+
             return Task.CompletedTask;
         }
     }
