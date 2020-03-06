@@ -2,12 +2,37 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace P1x3lc0w.DiscordStarboardBot
 {
     internal static class Starboard
     {
-        public static void UpdateStarCount(IUserMessage msg, int delta)
+        public static async Task RescanMessage(GuildData guildData, IUserMessage message, IUserMessage starboardMessage = null)
+        {
+            uint currentStarCount = 0;
+            if (guildData.messageData.ContainsKey(message.Id))
+            {
+                currentStarCount = guildData.messageData[message.Id].stars;
+            }
+
+            foreach (KeyValuePair<IEmote, ReactionMetadata> keyValue in message.Reactions)
+            {
+                if (keyValue.Key.Name.Equals("⭐", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    int delta = keyValue.Value.ReactionCount - (int)currentStarCount;
+                    if (await message.GetReactionUsersAsync(new Emoji("⭐"), Math.Min((int)guildData.requiredStarCount * 10, 100)).Any(users => users.Any(user => user.Id == message.Author.Id)))
+                    {
+                        await message.RemoveReactionAsync(new Emoji("⭐"), message.Author).ConfigureAwait(false);
+                        delta -= 1;
+                    }
+
+                    Starboard.UpdateStarCount(message, delta, starboardMessage);
+                }
+            }
+        }
+
+        public static void UpdateStarCount(IUserMessage msg, int delta, IUserMessage starboardMessage = null)
         {
             GuildData guildData = Data.BotData.guildDictionary[(msg.Channel as ITextChannel).Guild.Id];
 
@@ -22,7 +47,8 @@ namespace P1x3lc0w.DiscordStarboardBot
                         created = msg.CreatedAt,
                         userId = msg.Author.Id,
                         isNsfw = (msg.Channel as ITextChannel).IsNsfw,
-                        channelId = msg.Channel.Id
+                        channelId = msg.Channel.Id,
+                        starboardMessageId = starboardMessage?.Id ?? 0
                     };
                     guildData.messageData.Add(msg.Id, messageData);
                 }
