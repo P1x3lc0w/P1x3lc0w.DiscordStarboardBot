@@ -43,9 +43,13 @@ namespace P1x3lc0w.DiscordStarboardBot
             // Create a number to track where the prefix ends and the command begins
             int argPos = 0;
 
-            // Determine if the message is a command based on the prefix and make sure no bots trigger commands
-            if (!(message.HasMentionPrefix(_client.CurrentUser, ref argPos)) ||
-                message.Author.IsBot)
+            // Make sure no bots trigger commands
+            if (message.Author.IsBot)
+                return;
+
+            // Determine if the message is a command based on the prefix and
+            if (!(message.HasMentionPrefix(_client.CurrentUser, ref argPos)||
+                message.HasCharPrefix('*', ref argPos)))
                 return;
 
             // Create a WebSocket-based command context based on the message
