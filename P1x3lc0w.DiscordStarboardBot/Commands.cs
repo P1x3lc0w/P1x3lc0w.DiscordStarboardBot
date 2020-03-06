@@ -10,7 +10,7 @@ namespace P1x3lc0w.DiscordStarboardBot
 {
     public class Commands : ModuleBase<SocketCommandContext>
     {
-        [Command("channel")]
+        [Command("config channel")]
         [RequireUserPermission(Discord.GuildPermission.Administrator)]
         public async Task SetStarboardChannel(SocketTextChannel channel)
         {
@@ -27,7 +27,7 @@ namespace P1x3lc0w.DiscordStarboardBot
             }
         }
 
-        [Command("minStars")]
+        [Command("config minStars")]
         [RequireUserPermission(Discord.GuildPermission.Administrator)]
         public async Task SetMinStars(uint minStars)
         {
@@ -37,7 +37,7 @@ namespace P1x3lc0w.DiscordStarboardBot
             await ReplyAsync($":star: Set min star count to `{minStars}`");
         }
 
-        [Command("save")]
+        [Command("admin save")]
         [RequireUserPermission(Discord.GuildPermission.Administrator)]
         public async Task Save()
         {
@@ -46,21 +46,20 @@ namespace P1x3lc0w.DiscordStarboardBot
             await ReplyAsync($":white_check_mark: Saved!");
         }
 
-        [Command("scan")]
+        [Command("admin scan")]
         [RequireUserPermission(Discord.GuildPermission.Administrator)]
         public async Task Scan(SocketTextChannel channel, string messageId)
         {
             GuildData guildData = Data.BotData.guildDictionary[Context.Guild.Id];
 
-            if (!ulong.TryParse(messageId, out ulong msgId))
+            if (!UInt64.TryParse(messageId, out ulong msgId))
             {
                 await ReplyAsync(":x: Invalid message id");
                 return;
             }
 
-            IUserMessage message = await channel.GetMessageAsync(msgId) as IUserMessage;
 
-            if (message == null)
+            if (!(await channel.GetMessageAsync(msgId) is IUserMessage message))
             {
                 await ReplyAsync(":x: Message Not Found!");
             }
@@ -88,6 +87,13 @@ namespace P1x3lc0w.DiscordStarboardBot
                 }
                 await ReplyAsync(":white_check_mark: Message Was Scanned!");
             }
+        }
+
+        [Command("leaderboard")]
+        [RequireUserPermission(Discord.GuildPermission.Administrator)]
+        public async Task Leaderboard()
+        {
+            await ReplyAsync(await LeaderboardUtil.GetLeaderboardStringAsync(Context.Guild));
         }
     }
 }
