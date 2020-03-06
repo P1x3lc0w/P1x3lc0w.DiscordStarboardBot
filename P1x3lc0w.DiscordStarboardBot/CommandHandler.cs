@@ -48,12 +48,14 @@ namespace P1x3lc0w.DiscordStarboardBot
                 return;
 
             // Determine if the message is a command based on the prefix and
-            if (!(message.HasMentionPrefix(_client.CurrentUser, ref argPos)||
-                message.HasCharPrefix('*', ref argPos)))
+            if (!(
+                message.HasMentionPrefix(_client.CurrentUser, ref argPos) ||
+                message.HasCharPrefix('*', ref argPos)
+                ))
                 return;
 
             // Create a WebSocket-based command context based on the message
-            var context = new SocketCommandContext(_client, message);
+            SocketCommandContext context = new SocketCommandContext(_client, message);
 
             // Execute the command with the command context we just
             // created, along with the service provider for precondition checks.

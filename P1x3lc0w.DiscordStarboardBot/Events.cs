@@ -35,11 +35,12 @@ namespace P1x3lc0w.DiscordStarboardBot
             return Task.CompletedTask;
         }
 
-        internal static Task Sc_GuildMemberUpdated(SocketGuildUser arg1, SocketGuildUser arg2) 
+        internal static Task Sc_GuildMemberUpdated(SocketGuildUser arg1, SocketGuildUser arg2)
         {
             Data.BotData.guildDictionary[arg2.Guild.Id].UpdateMessagesByUser(arg2.Guild, arg2.Id);
             return Task.CompletedTask;
         }
+
         internal static Task Sc_Ready() => Task.CompletedTask;
 
         internal static async Task Sc_ReactionRemoved(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)

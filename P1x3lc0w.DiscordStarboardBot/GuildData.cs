@@ -22,7 +22,7 @@ namespace P1x3lc0w.DiscordStarboardBot
         {
             Parallel.ForEach<KeyValuePair<ulong, MessageData>>(messageData, async msgData =>
             {
-                if(msgData.Value.userId == userId)
+                if (msgData.Value.userId == userId)
                 {
                     await Starboard.UpdateStarboardMessage(this, await guild.GetTextChannel(msgData.Value.channelId).GetMessageAsync(msgData.Key) as IUserMessage, msgData.Value);
                 }
