@@ -37,8 +37,17 @@ namespace P1x3lc0w.DiscordStarboardBot
 
         internal static Task Sc_GuildMemberUpdated(SocketGuildUser arg1, SocketGuildUser arg2)
         {
-            Data.BotData.guildDictionary[arg2.Guild.Id].UpdateMessagesByUser(arg2.Guild, arg2.Id);
-            return Task.CompletedTask;
+            try
+            {
+                Data.BotData.guildDictionary[arg2.Guild.Id].UpdateMessagesByUser(arg2.Guild, arg2.Id);
+                return Task.CompletedTask;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Exception while updating starboard message: {e.GetType().FullName}: {e.Message}\n{e.StackTrace}");
+                return Task.CompletedTask;
+            }
+
         }
 
         internal static Task Sc_Ready() => Task.CompletedTask;

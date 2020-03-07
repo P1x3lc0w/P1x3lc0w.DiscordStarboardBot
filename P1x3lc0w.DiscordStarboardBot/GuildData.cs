@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -22,9 +23,16 @@ namespace P1x3lc0w.DiscordStarboardBot
         {
             Parallel.ForEach<KeyValuePair<ulong, MessageData>>(messageData, async msgData =>
             {
-                if (msgData.Value.userId == userId)
+                try
                 {
-                    await Starboard.UpdateStarboardMessage(this, await guild.GetTextChannel(msgData.Value.channelId).GetMessageAsync(msgData.Key) as IUserMessage, msgData.Value);
+                    if (msgData.Value.userId == userId)
+                    {
+                        await Starboard.UpdateStarboardMessage(this, await guild.GetTextChannel(msgData.Value.channelId).GetMessageAsync(msgData.Key) as IUserMessage, msgData.Value);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Exception while updating starboard message {msgData.Value?.starboardMessageId}: {e.GetType().FullName}: {e.Message}\n{e.StackTrace}");
                 }
             });
         }
