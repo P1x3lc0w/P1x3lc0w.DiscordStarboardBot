@@ -10,6 +10,19 @@ namespace P1x3lc0w.DiscordStarboardBot
     {
         public static async Task RescanMessage(GuildData guildData, IUserMessage message, IUserMessage starboardMessage = null)
         {
+            if(message.Author.Id == Program.sc.CurrentUser.Id)
+            {
+                await message.GetReactionUsersAsync(new Emoji("⭐"), 100).ForEachAsync(async users =>
+                {
+                    foreach(IUser user in users)
+                    {
+                        await message.RemoveReactionAsync(new Emoji("⭐"), user);
+                    }
+                });
+
+                return;
+            }
+
             uint currentStarCount = 0;
             if (guildData.messageData.ContainsKey(message.Id))
             {
