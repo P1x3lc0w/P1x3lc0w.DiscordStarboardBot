@@ -69,6 +69,11 @@ namespace P1x3lc0w.DiscordStarboardBot
         {
             IUserMessage msg = arg1.Value ?? await arg1.DownloadAsync();
 
+            if(msg.Author.Id == Program.sc.CurrentUser.Id)
+            {
+                return;
+            }
+
             if (arg3.Emote.Name.Equals("⭐", StringComparison.InvariantCultureIgnoreCase))
             {
                 if (msg.Author.Id == arg3.User.Value.Id)
