@@ -21,7 +21,7 @@ namespace P1x3lc0w.DiscordStarboardBot
                 if (keyValue.Key.Name.Equals("⭐", StringComparison.InvariantCultureIgnoreCase))
                 {
                     int delta = keyValue.Value.ReactionCount - (int)currentStarCount;
-                    if (await message.GetReactionUsersAsync(new Emoji("⭐"), Math.Min((int)guildData.requiredStarCount * 10, 100)).Any(users => users.Any(user => user.Id == message.Author.Id)))
+                    if (await message.GetReactionUsersAsync(new Emoji("⭐"), Math.Min((int)guildData.requiredStarCount * 10, 100)).AnyAsync(users => users.Any(user => user.Id == message.Author.Id)))
                     {
                         await message.RemoveReactionAsync(new Emoji("⭐"), message.Author).ConfigureAwait(false);
                         delta -= 1;
