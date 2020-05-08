@@ -12,14 +12,10 @@ namespace P1x3lc0w.DiscordStarboardBot
         {
             if(message.Author.Id == Program.sc.CurrentUser.Id)
             {
-                await message.GetReactionUsersAsync(new Emoji("⭐"), 100).ForEachAsync(async users =>
+                if (guildData.messageData.ContainsKey(message.Id))
                 {
-                    foreach(IUser user in users)
-                    {
-                        await message.RemoveReactionAsync(new Emoji("⭐"), user);
-                    }
-                });
-
+                    guildData.messageData.Remove(message.Id);
+                }
                 return;
             }
 
