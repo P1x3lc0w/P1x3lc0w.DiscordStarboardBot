@@ -43,7 +43,7 @@ namespace P1x3lc0w.DiscordStarboardBot
                 DefaultRunMode = RunMode.Async,     // Force all commands to run async by default
             }));
 
-            var provider = services.BuildServiceProvider();
+            ServiceProvider provider = services.BuildServiceProvider();
             _ = provider.GetRequiredService<CommandHandler>().InstallCommandsAsync();
 
             string token = "";

@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -8,14 +9,14 @@ namespace P1x3lc0w.DiscordStarboardBot
 {
     internal class GuildData
     {
-        public Dictionary<ulong, MessageData> messageData;
+        public ConcurrentDictionary<ulong, MessageData> messageData;
         public ulong starboardChannel;
         public ulong starboardChannelNSFW;
         public uint requiredStarCount;
 
         public GuildData()
         {
-            messageData = new Dictionary<ulong, MessageData>();
+            messageData = new ConcurrentDictionary<ulong, MessageData>();
             requiredStarCount = 3;
         }
 

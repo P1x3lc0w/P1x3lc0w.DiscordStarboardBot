@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace P1x3lc0w.DiscordStarboardBot
@@ -7,11 +8,11 @@ namespace P1x3lc0w.DiscordStarboardBot
     {
         public static Data BotData { get; private set; }
 
-        public Dictionary<ulong, GuildData> guildDictionary;
+        public ConcurrentDictionary<ulong, GuildData> guildDictionary;
 
         public Data()
         {
-            guildDictionary = new Dictionary<ulong, GuildData>();
+            guildDictionary = new ConcurrentDictionary<ulong, GuildData>();
         }
 
         public static async Task LoadDataAsync()

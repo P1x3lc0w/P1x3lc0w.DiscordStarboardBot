@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Threading;
 
 namespace P1x3lc0w.DiscordStarboardBot
 {
@@ -14,7 +15,7 @@ namespace P1x3lc0w.DiscordStarboardBot
             {
                 if (guildData.messageData.ContainsKey(message.Id))
                 {
-                    guildData.messageData.Remove(message.Id);
+                    guildData.messageData.Remove(message.Id, out _);
                 }
                 return;
             }
@@ -36,36 +37,27 @@ namespace P1x3lc0w.DiscordStarboardBot
                         delta -= 1;
                     }
 
-                    Starboard.UpdateStarCount(message, delta, starboardMessage);
+                    await UpdateStarCount(message, delta, starboardMessage);
                 }
             }
         }
 
-        public static void UpdateStarCount(IUserMessage msg, int delta, IUserMessage starboardMessage = null)
+        public static async Task UpdateStarCount(IUserMessage msg, int delta, IUserMessage starboardMessage = null)
         {
             GuildData guildData = Data.BotData.guildDictionary[(msg.Channel as ITextChannel).Guild.Id];
 
-            MessageData messageData = null;
-
-            lock (guildData)
-            {
-                if (!guildData.messageData.ContainsKey(msg.Id))
-                {
-                    messageData = new MessageData()
+            MessageData messageData = 
+                guildData.messageData.GetOrAdd(
+                    msg.Id,
+                    new MessageData()
                     {
                         created = msg.CreatedAt,
                         userId = msg.Author.Id,
                         isNsfw = (msg.Channel as ITextChannel).IsNsfw,
                         channelId = msg.Channel.Id,
-                        starboardMessageId = starboardMessage?.Id ?? 0
-                    };
-                    guildData.messageData.Add(msg.Id, messageData);
-                }
-                else
-                {
-                    messageData = guildData.messageData[msg.Id];
-                }
-            }
+                        starboardMessageId = starboardMessage?.Id
+                    }
+                );
 
             lock (messageData)
             {
@@ -75,33 +67,29 @@ namespace P1x3lc0w.DiscordStarboardBot
                     return;
 
                 messageData.stars = (uint)newStarCount;
+            }
 
-                if (messageData.starboardMessageId != 0)
+            await CreateOrUpdateStarboardMessage(guildData, msg, messageData);
+        }
+
+        static async Task CreateOrUpdateStarboardMessage(GuildData guildData, IUserMessage msg, MessageData messageData)
+        {
+            if (messageData.starboardMessageStatus == StarboardMessageStatus.CREATED)
+            {
+                while (messageData.starboardMessageId == 1)
                 {
-                    Task.Run(async () =>
-                    {
-                        while (messageData.starboardMessageId == 1)
-                        {
-                            await Task.Delay(100);
-                        }
-
-                        await UpdateStarboardMessage(guildData, msg, messageData);
-                    });
+                    await Task.Delay(100);
                 }
-                else
-                {
-                    if (messageData.stars >= guildData.requiredStarCount)
-                    {
-                        //Save that we are currently createing a message
-                        messageData.starboardMessageId = 1;
 
-                        Task.Run(async () => messageData.starboardMessageId = await CreateStarboardMessage(guildData, msg, messageData));
-                    }
-                }
+                await UpdateStarboardMessage(guildData, msg, messageData);
+            }
+            else if(messageData.starboardMessageStatus == StarboardMessageStatus.NONE && messageData.stars >= guildData.requiredStarCount)
+            {
+                EnqueueStarboardMessageCreation(guildData, msg, messageData);
             }
         }
 
-        public static Embed CreateEmbed(IUserMessage msg, MessageData data)
+        public static Embed CreateStarboardEmbed(IUserMessage msg, MessageData data)
         {
             string avatarUrl = msg.Author.GetAvatarUrl() ?? msg.Author.GetDefaultAvatarUrl();
 
@@ -152,17 +140,24 @@ namespace P1x3lc0w.DiscordStarboardBot
         {
             try
             {
-                bool isNsfw = (msg.Channel as ITextChannel).IsNsfw;
-
-                IGuild guild = (msg.Channel as ITextChannel).Guild;
-                ITextChannel starboardChannel = isNsfw ? await guild.GetTextChannelAsync(guildData.starboardChannelNSFW) : await guild.GetTextChannelAsync(guildData.starboardChannel);
-
-                IUserMessage startboardMsg = await starboardChannel.GetMessageAsync(data.starboardMessageId) as IUserMessage;//SendMessageAsync(embed: CreateEmbed(msg, data));
-
-                await startboardMsg.ModifyAsync((prop) =>
+                if(data.starboardMessageId != null)
                 {
-                    prop.Embed = CreateEmbed(msg, data);
-                });
+                    bool isNsfw = (msg.Channel as ITextChannel).IsNsfw;
+
+                    IGuild guild = (msg.Channel as ITextChannel).Guild;
+                    ITextChannel starboardChannel = isNsfw ? await guild.GetTextChannelAsync(guildData.starboardChannelNSFW) : await guild.GetTextChannelAsync(guildData.starboardChannel);
+
+                    IUserMessage startboardMsg = await starboardChannel.GetMessageAsync(data.starboardMessageId.Value) as IUserMessage;
+
+                    await startboardMsg.ModifyAsync((prop) =>
+                    {
+                        prop.Embed = CreateStarboardEmbed(msg, data);
+                    });
+                }
+                else
+                {
+                    EnqueueStarboardMessageCreation(guildData, msg, data);
+                }
             }
             catch (Exception e)
             {
@@ -170,8 +165,23 @@ namespace P1x3lc0w.DiscordStarboardBot
             }
         }
 
-        internal static async Task<ulong> CreateStarboardMessage(GuildData guildData, IUserMessage msg, MessageData data)
+        static void EnqueueStarboardMessageCreation(GuildData guildData, IUserMessage msg, MessageData messageData)
         {
+            lock (messageData)
+            {
+                if (messageData.starboardMessageStatus != StarboardMessageStatus.CREATING)
+                {
+                    messageData.starboardMessageStatus = StarboardMessageStatus.CREATING;
+
+                    _ = CreateStarboardMessage(guildData, msg, messageData);
+                }
+            }
+        }
+
+        internal static async Task<ulong?> CreateStarboardMessage(GuildData guildData, IUserMessage msg, MessageData data)
+        {
+            ulong? createdStarboardMsgId = null;
+
             try
             {
                 bool isNsfw = (msg.Channel as ITextChannel).IsNsfw;
@@ -179,14 +189,21 @@ namespace P1x3lc0w.DiscordStarboardBot
                 IGuild guild = (msg.Channel as ITextChannel).Guild;
                 ITextChannel starboardChannel = isNsfw ? await guild.GetTextChannelAsync(guildData.starboardChannelNSFW) : await guild.GetTextChannelAsync(guildData.starboardChannel);
 
-                IUserMessage startboardMsg = await starboardChannel.SendMessageAsync(embed: CreateEmbed(msg, data));
-                return startboardMsg.Id;
+                IUserMessage starboardMsg = await starboardChannel.SendMessageAsync(embed: CreateStarboardEmbed(msg, data));
+                createdStarboardMsgId = starboardMsg.Id;
             }
             catch (Exception e)
             {
                 Console.Error.WriteLine($"Error while creating starboard message: {e.GetType().FullName}: {e.Message}");
-                return 0;
+                createdStarboardMsgId = null;
             }
+
+            if(createdStarboardMsgId != null)
+            {
+                data.starboardMessageStatus = StarboardMessageStatus.CREATED;
+            }
+
+            return createdStarboardMsgId;
         }
     }
 }

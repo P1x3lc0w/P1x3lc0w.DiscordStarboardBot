@@ -60,7 +60,7 @@ namespace P1x3lc0w.DiscordStarboardBot
             {
                 if (msg.Author.Id != arg3.User.Value.Id)
                 {
-                    Starboard.UpdateStarCount(msg, -1);
+                    await Starboard.UpdateStarCount(msg, -1);
                 }
             }
         }
@@ -82,7 +82,7 @@ namespace P1x3lc0w.DiscordStarboardBot
                 }
                 else
                 {
-                    Starboard.UpdateStarCount(msg, 1);
+                    await Starboard.UpdateStarCount(msg, 1);
                 }
             }
         }
@@ -95,7 +95,7 @@ namespace P1x3lc0w.DiscordStarboardBot
             {
                 Console.WriteLine($"Createing Guild Data for: {arg.Name} ({arg.Id})");
 
-                Data.BotData.guildDictionary.Add(arg.Id, new GuildData());
+                Data.BotData.guildDictionary.TryAdd(arg.Id, new GuildData());
             }
 
             return Task.CompletedTask;
