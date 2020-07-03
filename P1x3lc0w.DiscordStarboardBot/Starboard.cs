@@ -169,7 +169,7 @@ namespace P1x3lc0w.DiscordStarboardBot
         {
             lock (messageData)
             {
-                if (messageData.starboardMessageStatus != StarboardMessageStatus.CREATING)
+                if (messageData.starboardMessageStatus != StarboardMessageStatus.CREATING && messageData.stars >= guildData.requiredStarCount)
                 {
                     messageData.starboardMessageStatus = StarboardMessageStatus.CREATING;
 
