@@ -17,6 +17,10 @@ namespace P1x3lc0w.DiscordStarboardBot.Datafixing
                         messageDataKV.Value.starboardMessageStatus = StarboardMessageStatus.NONE;
                         messageDataKV.Value.starboardMessageId = null;
                     }
+                    else if(messageDataKV.Value.starboardMessageId > 10 && messageDataKV.Value.starboardMessageStatus == StarboardMessageStatus.NONE)
+                    {
+                        messageDataKV.Value.starboardMessageStatus = StarboardMessageStatus.CREATED;
+                    }
 
                     if(messageDataKV.Value.userId == 622703582801559563)
                     {
