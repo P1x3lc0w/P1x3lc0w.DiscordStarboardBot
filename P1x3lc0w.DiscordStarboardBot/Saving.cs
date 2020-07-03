@@ -10,6 +10,9 @@ namespace P1x3lc0w.DiscordStarboardBot
 
         public static async Task SaveDataAsync(Data data)
         {
+            if (SaveDataExists)
+                File.Move("savedata.json", "savedata.old.json");
+
             await File.WriteAllTextAsync("savedata.json", JsonConvert.SerializeObject(data));
         }
 

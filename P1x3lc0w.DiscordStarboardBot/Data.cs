@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using P1x3lc0w.DiscordStarboardBot.Datafixing;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -19,7 +20,9 @@ namespace P1x3lc0w.DiscordStarboardBot
         {
             if (Saving.SaveDataExists)
             {
-                BotData = await Saving.LoadDataAsync();
+                Data data = await Saving.LoadDataAsync();
+                Datafixer.FixData(data);
+                BotData = data;
             }
             else
             {

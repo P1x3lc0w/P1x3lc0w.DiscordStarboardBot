@@ -1,0 +1,29 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace P1x3lc0w.DiscordStarboardBot.Datafixing
+{
+    static class Datafixer
+    {
+        public static void FixData(Data dataToFix)
+        {
+            foreach(KeyValuePair<ulong, GuildData> guildDataKV in dataToFix.guildDictionary)
+            {
+                foreach(KeyValuePair<ulong, MessageData> messageDataKV in guildDataKV.Value.messageData)
+                {
+                    if(messageDataKV.Value.starboardMessageId < 10 || messageDataKV.Value.starboardMessageStatus == StarboardMessageStatus.CREATING)
+                    {
+                        messageDataKV.Value.starboardMessageStatus = StarboardMessageStatus.NONE;
+                        messageDataKV.Value.starboardMessageId = null;
+                    }
+
+                    if(messageDataKV.Value.userId == Program.sc.CurrentUser.Id)
+                    {
+                        guildDataKV.Value.messageData.Remove(messageDataKV.Key, out _);
+                    }
+                }
+            }
+        }
+    }
+}
