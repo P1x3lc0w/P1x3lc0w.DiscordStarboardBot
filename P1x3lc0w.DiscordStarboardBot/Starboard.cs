@@ -198,6 +198,8 @@ namespace P1x3lc0w.DiscordStarboardBot
                 createdStarboardMsgId = null;
             }
 
+            data.starboardMessageId = createdStarboardMsgId;
+
             if(createdStarboardMsgId != null)
             {
                 data.starboardMessageStatus = StarboardMessageStatus.CREATED;

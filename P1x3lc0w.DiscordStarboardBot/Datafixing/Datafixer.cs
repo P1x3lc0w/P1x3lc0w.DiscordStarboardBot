@@ -18,7 +18,7 @@ namespace P1x3lc0w.DiscordStarboardBot.Datafixing
                         messageDataKV.Value.starboardMessageId = null;
                     }
 
-                    if(messageDataKV.Value.userId == Program.sc.CurrentUser.Id)
+                    if(messageDataKV.Value.userId == 622703582801559563)
                     {
                         guildDataKV.Value.messageData.Remove(messageDataKV.Key, out _);
                     }
