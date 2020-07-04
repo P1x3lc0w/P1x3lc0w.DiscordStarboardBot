@@ -10,8 +10,13 @@ namespace P1x3lc0w.DiscordStarboardBot
 {
     static class LeaderboardUtil
     {
-        public static async Task<string> GetLeaderboardStringAsync(IGuild guild)
+        const uint ENTRIES_PER_PAGE = 10;
+
+        public static async Task<string> GetLeaderboardStringAsync(IGuild guild, uint page)
         {
+            if (page == 0)
+                page = 1;
+
             GuildData guildData = Data.BotData.guildDictionary[guild.Id];
 
             IOrderedEnumerable<IGrouping<ulong, KeyValuePair<ulong, MessageData>>> userMessageGroups = 
@@ -20,18 +25,23 @@ namespace P1x3lc0w.DiscordStarboardBot
                 orderby msgGroup.Sum(mKv => mKv.Value.GetStarCount()) descending
                 select msgGroup;
 
-            return await GetLeaderboardString(userMessageGroups, guild);
+            uint pageCount = (uint)Math.Ceiling((float)userMessageGroups.Count() / ENTRIES_PER_PAGE);
+
+            if (page > pageCount)
+                return $"❌ Page {page} does not exist. There are {pageCount} pages";
+
+            return await GetLeaderboardStringAsync(userMessageGroups.Skip((int)((page-1) * ENTRIES_PER_PAGE)).Take((int)ENTRIES_PER_PAGE), guild, page, pageCount);
 
         }
 
-        private static async Task<string> GetLeaderboardString(IOrderedEnumerable<IGrouping<ulong, KeyValuePair<ulong, MessageData>>> userMessageGroups, IGuild guild)
+        private static async Task<string> GetLeaderboardStringAsync(IEnumerable<IGrouping<ulong, KeyValuePair<ulong, MessageData>>> userMessageGroups, IGuild guild, uint page, uint pageCount)
         {
             StringBuilder sb = new StringBuilder();
 
             sb.Append("✨⭐🌟 🏆 Star Leaderboard 🏆 🌟⭐✨\n\n");
 
-            int index = 1;
-            int lastIndex = index;
+            uint index = 1 + ((page - 1) * ENTRIES_PER_PAGE);
+            uint lastIndex = index;
             long lastCount = Int64.MaxValue;
 
             foreach(IGrouping<ulong, KeyValuePair<ulong, MessageData>> userMsgGroup in userMessageGroups)
@@ -61,6 +71,11 @@ namespace P1x3lc0w.DiscordStarboardBot
                 index++;
             }
 
+            sb.Append("*Page ");
+            sb.Append(page);
+            sb.Append(" of ");
+            sb.Append(pageCount);
+            sb.Append("*");
             return sb.ToString();
         }
 

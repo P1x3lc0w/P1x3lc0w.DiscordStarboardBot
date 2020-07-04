@@ -189,11 +189,11 @@ namespace P1x3lc0w.DiscordStarboardBot
         }
 
         [Command("leaderboard")]
-        public async Task Leaderboard()
+        public async Task Leaderboard(uint page = 1)
         {
             try
             {
-                await ReplyAsync(await LeaderboardUtil.GetLeaderboardStringAsync(Context.Guild));
+                await ReplyAsync(await LeaderboardUtil.GetLeaderboardStringAsync(Context.Guild, page));
             }
             catch(Exception e)
 
