@@ -75,7 +75,7 @@ namespace P1x3lc0w.DiscordStarboardBot
 
         [Command("admin rescanall")]
         [RequireUserPermission(Discord.GuildPermission.Administrator)]
-        public async Task Scan()
+        public async Task Rescan()
         {
             try
             {
@@ -84,7 +84,15 @@ namespace P1x3lc0w.DiscordStarboardBot
                 foreach(KeyValuePair<ulong, MessageData> messageDataKV in guildData.messageData)
                 {
                     IUserMessage message = await messageDataKV.Value.GetMessageAsync(Context.Guild);
-                    await Starboard.RescanMessage(guildData, message, await messageDataKV.Value.GetStarboardMessageAsync(message, guildData));
+
+                    if(message != null)
+                    {
+                        await Starboard.RescanMessage(guildData, message, await messageDataKV.Value.GetStarboardMessageAsync(message, guildData));
+                    }
+                    else
+                    {
+                        await ReplyAsync($"❌ Could not find message `{messageDataKV.Key}`.");
+                    }
                 }
 
                 await ReplyAsync("✅ Rescanned all saved messages.");
@@ -167,7 +175,7 @@ namespace P1x3lc0w.DiscordStarboardBot
                                             ulong channelId = UInt64.Parse(parts[5]);
                                             ulong msgId = UInt64.Parse(parts[6]);
 
-                                            await ReplyAsync($":information_source: Found starboard message {msgId}");
+                                            await ReplyAsync($":information_source: Found starboard message `{msgId}`");
 
                                             ITextChannel textChannel = Context.Guild.GetTextChannel(channelId);
 
@@ -178,17 +186,17 @@ namespace P1x3lc0w.DiscordStarboardBot
                                                 if (message != null)
                                                 {
                                                     await Starboard.RescanMessage(guildData, message, usrMsg);
-                                                    await ReplyAsync($":white_check_mark: Message {message.Id} (for starboard message {usrMsg.Id}) was scanned!");
+                                                    await ReplyAsync($":white_check_mark: Message `{message.Id}` (for starboard message `{usrMsg.Id}`) was scanned!");
                                                     rescanCount++;
                                                 }
                                                 else
                                                 {
-                                                    await ReplyAsync($":x: Could not find message {msgId}");
+                                                    await ReplyAsync($":x: Could not find message `{msgId}`");
                                                 }
                                             }
                                             else
                                             {
-                                                await ReplyAsync($":x: Could not find channel {channelId}");
+                                                await ReplyAsync($":x: Could not find channel `{channelId}`");
                                             }
                                         }
                                     }
@@ -196,7 +204,7 @@ namespace P1x3lc0w.DiscordStarboardBot
                             }
                         }
 
-                        await ReplyAsync($":white_check_mark: Rescanned {rescanCount} messages.");
+                        await ReplyAsync($":white_check_mark: Rescanned `{rescanCount}` messages.");
                     }
                     catch (Exception e)
                     {
