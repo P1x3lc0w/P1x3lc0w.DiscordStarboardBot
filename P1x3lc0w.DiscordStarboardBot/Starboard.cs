@@ -1,78 +1,93 @@
 ﻿using Discord;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Linq;
-using System.Threading;
+using System.Threading.Tasks;
 
 namespace P1x3lc0w.DiscordStarboardBot
 {
     internal static class Starboard
     {
+        public static IEmote StarboardEmote { get; } = new Emoji("⭐");
         public static async Task RescanMessage(GuildData guildData, IUserMessage message, IUserMessage starboardMessage = null)
         {
-            if(message.Author.Id == Program.sc.CurrentUser.Id)
+            if (message.Author.Id == Program.sc.CurrentUser.Id)
             {
                 if (guildData.messageData.ContainsKey(message.Id))
                 {
-                    guildData.messageData.Remove(message.Id, out _);
+                    guildData.messageData.TryRemove(message.Id, out _);
                 }
                 return;
             }
 
-            uint currentStarCount = 0;
-            if (guildData.messageData.ContainsKey(message.Id))
-            {
-                currentStarCount = guildData.messageData[message.Id].stars;
-            }
+            await UpdateStarsGivenAsync(message, message.GetReactionUsersAsync(StarboardEmote, 5000), starboardMessage);
+        }
 
-            foreach (KeyValuePair<IEmote, ReactionMetadata> keyValue in message.Reactions)
+        public static async Task UpdateStarsGivenAsync(IUserMessage starredMessage, IAsyncEnumerable<IReadOnlyCollection<IUser>> starGivingUsers, IUserMessage starboardMessage = null)
+        {
+            GuildData guildData = Data.BotData.guildDictionary[(starredMessage.Channel as ITextChannel).Guild.Id];
+            MessageData messageData = GetOrAddMessageData(guildData, starredMessage, starboardMessage);
+
+            messageData.StarGivingUsers.Clear();
+
+            await starGivingUsers.ForEachAsync(users =>
             {
-                if (keyValue.Key.Name.Equals("⭐", StringComparison.InvariantCultureIgnoreCase))
+                foreach (IUser user in users)
                 {
-                    int delta = keyValue.Value.ReactionCount - (int)currentStarCount;
-                    if (await message.GetReactionUsersAsync(new Emoji("⭐"), Math.Min((int)guildData.requiredStarCount * 10, 100)).AnyAsync(users => users.Any(user => user.Id == message.Author.Id)))
+                    if (user.Id != starredMessage.Author.Id)
                     {
-                        await message.RemoveReactionAsync(new Emoji("⭐"), message.Author).ConfigureAwait(false);
-                        delta -= 1;
+                        messageData.StarGivingUsers.Add(user.Id);
                     }
+                    else
+                    {
+                        starredMessage.RemoveReactionAsync(StarboardEmote, user);
+                    }
+                }
+            });
+            
+            await CreateOrUpdateStarboardMessage(guildData, starredMessage, messageData);
+        }
 
-                    await UpdateStarCount(message, delta, starboardMessage);
+        public static async Task UpdateStarsGivenAsync(IUserMessage starredMessage, IEnumerable<IUser> starGivingUsers, IUserMessage starboardMessage = null)
+        {
+            GuildData guildData = Data.BotData.guildDictionary[(starredMessage.Channel as ITextChannel).Guild.Id];
+            MessageData messageData = GetOrAddMessageData(guildData, starredMessage, starboardMessage);
+
+            messageData.StarGivingUsers.Clear();
+
+            foreach (IUser user in starGivingUsers)
+            {
+                if (user.Id != starredMessage.Author.Id)
+                {
+                    messageData.StarGivingUsers.Add(user.Id);
+                }
+                else
+                {
+                    await starredMessage.RemoveReactionAsync(StarboardEmote, user);
                 }
             }
+
+            await CreateOrUpdateStarboardMessage(guildData, starredMessage, messageData);
         }
 
-        public static async Task UpdateStarCount(IUserMessage msg, int delta, IUserMessage starboardMessage = null)
+        public static async Task UpdateStarGivenAsync(IUserMessage starredMessage, IUser starGivingUser, bool starGiven, IUserMessage starboardMessage = null)
         {
-            GuildData guildData = Data.BotData.guildDictionary[(msg.Channel as ITextChannel).Guild.Id];
+            GuildData guildData = Data.BotData.guildDictionary[(starredMessage.Channel as ITextChannel).Guild.Id];
+            MessageData messageData = GetOrAddMessageData(guildData, starredMessage, starboardMessage);
 
-            MessageData messageData = 
-                guildData.messageData.GetOrAdd(
-                    msg.Id,
-                    new MessageData()
-                    {
-                        created = msg.CreatedAt,
-                        userId = msg.Author.Id,
-                        isNsfw = (msg.Channel as ITextChannel).IsNsfw,
-                        channelId = msg.Channel.Id,
-                        starboardMessageId = starboardMessage?.Id
-                    }
-                );
-
-            lock (messageData)
+            if (starGiven)
             {
-                int newStarCount = (int)messageData.stars + delta;
-
-                if (newStarCount < 0)
-                    return;
-
-                messageData.stars = (uint)newStarCount;
+                messageData.StarGivingUsers.Add(starGivingUser.Id);
+            }
+            else
+            {
+                messageData.StarGivingUsers.Remove(starGivingUser.Id);
             }
 
-            await CreateOrUpdateStarboardMessage(guildData, msg, messageData);
+            await CreateOrUpdateStarboardMessage(guildData, starredMessage, messageData);
         }
 
-        static async Task CreateOrUpdateStarboardMessage(GuildData guildData, IUserMessage msg, MessageData messageData)
+        private static async Task CreateOrUpdateStarboardMessage(GuildData guildData, IUserMessage msg, MessageData messageData)
         {
             if (messageData.starboardMessageStatus == StarboardMessageStatus.CREATED)
             {
@@ -83,26 +98,37 @@ namespace P1x3lc0w.DiscordStarboardBot
 
                 await UpdateStarboardMessage(guildData, msg, messageData);
             }
-            else if(messageData.starboardMessageStatus == StarboardMessageStatus.NONE && messageData.stars >= guildData.requiredStarCount)
+            else if (messageData.starboardMessageStatus == StarboardMessageStatus.NONE && messageData.GetStarCount() >= guildData.requiredStarCount)
             {
                 EnqueueStarboardMessageCreation(guildData, msg, messageData);
             }
         }
 
-        public static Embed CreateStarboardEmbed(IUserMessage msg, MessageData data)
+        public static MessageData GetOrAddMessageData(GuildData guildData, IUserMessage starredMessage, IUserMessage starboardMessage = null)
+            => guildData.messageData.GetOrAdd(
+                    starredMessage.Id,
+                    new MessageData()
+                    {
+                        created = starredMessage.CreatedAt,
+                        userId = starredMessage.Author.Id,
+                        isNsfw = (starredMessage.Channel as ITextChannel).IsNsfw,
+                        channelId = starredMessage.Channel.Id,
+                        starboardMessageId = starboardMessage?.Id
+                    }
+                );
+
+        public static Embed CreateStarboardEmbed(IUserMessage msg, MessageData messageData)
         {
             string avatarUrl = msg.Author.GetAvatarUrl() ?? msg.Author.GetDefaultAvatarUrl();
 
             string jumpUrl = msg.GetJumpUrl();
 
             IEnumerator<IAttachment> enumerator = msg.Attachments.GetEnumerator();
-
-            IAttachment attachment = null;
             string imageUrl = null;
 
             if (enumerator.MoveNext())
             {
-                attachment = enumerator.Current;
+                IAttachment attachment = enumerator.Current;
 
                 if (!attachment.IsSpoiler())
                 {
@@ -119,7 +145,7 @@ namespace P1x3lc0w.DiscordStarboardBot
                 .WithUrl(jumpUrl);
 
             EmbedFooterBuilder footerBuilder = new EmbedFooterBuilder()
-                .WithText($"⭐{data.stars} • {data.created.ToString("yyyy-MM-dd HH:mm:ss zzz")}");
+                .WithText($"⭐{messageData.GetStarCount()} • {messageData.created:yyyy-MM-dd HH:mm:ss zzz}");
 
             EmbedBuilder embed = new EmbedBuilder()
                 .WithAuthor(authorBuilder)
@@ -140,7 +166,7 @@ namespace P1x3lc0w.DiscordStarboardBot
         {
             try
             {
-                if(data.starboardMessageId != null)
+                if (data.starboardMessageId != null)
                 {
                     bool isNsfw = (msg.Channel as ITextChannel).IsNsfw;
 
@@ -165,11 +191,11 @@ namespace P1x3lc0w.DiscordStarboardBot
             }
         }
 
-        static void EnqueueStarboardMessageCreation(GuildData guildData, IUserMessage msg, MessageData messageData)
+        private static void EnqueueStarboardMessageCreation(GuildData guildData, IUserMessage msg, MessageData messageData)
         {
             lock (messageData)
             {
-                if (messageData.starboardMessageStatus != StarboardMessageStatus.CREATING && messageData.stars >= guildData.requiredStarCount)
+                if (messageData.starboardMessageStatus != StarboardMessageStatus.CREATING && messageData.GetStarCount() >= guildData.requiredStarCount)
                 {
                     messageData.starboardMessageStatus = StarboardMessageStatus.CREATING;
 
@@ -200,7 +226,7 @@ namespace P1x3lc0w.DiscordStarboardBot
 
             data.starboardMessageId = createdStarboardMsgId;
 
-            if(createdStarboardMsgId != null)
+            if (createdStarboardMsgId != null)
             {
                 data.starboardMessageStatus = StarboardMessageStatus.CREATED;
             }

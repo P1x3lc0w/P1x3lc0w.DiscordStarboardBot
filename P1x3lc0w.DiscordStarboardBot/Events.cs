@@ -60,7 +60,7 @@ namespace P1x3lc0w.DiscordStarboardBot
             {
                 if (msg.Author.Id != arg3.User.Value.Id)
                 {
-                    await Starboard.UpdateStarCount(msg, -1);
+                    await Starboard.UpdateStarGivenAsync(msg, arg3.User.Value, false);
                 }
             }
         }
@@ -82,7 +82,7 @@ namespace P1x3lc0w.DiscordStarboardBot
                 }
                 else
                 {
-                    await Starboard.UpdateStarCount(msg, 1);
+                    await Starboard.UpdateStarGivenAsync(msg, arg3.User.Value, true);
                 }
             }
         }

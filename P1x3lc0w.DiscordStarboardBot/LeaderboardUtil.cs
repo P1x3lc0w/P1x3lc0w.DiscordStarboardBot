@@ -14,10 +14,12 @@ namespace P1x3lc0w.DiscordStarboardBot
         {
             GuildData guildData = Data.BotData.guildDictionary[guild.Id];
 
-            IOrderedEnumerable<IGrouping<ulong, KeyValuePair<ulong, MessageData>>> userMessageGroups = from msgKv in guildData.messageData
-                                                                                                       group msgKv by msgKv.Value.userId into msgGroup
-                                                                                                       orderby msgGroup.Sum(mKv => mKv.Value.stars) descending
-                                                                                                       select msgGroup;
+            IOrderedEnumerable<IGrouping<ulong, KeyValuePair<ulong, MessageData>>> userMessageGroups = 
+                from msgKv in guildData.messageData
+                group msgKv by msgKv.Value.userId into msgGroup
+                orderby msgGroup.Sum(mKv => mKv.Value.GetStarCount()) descending
+                select msgGroup;
+
             return await GetLeaderboardString(userMessageGroups, guild);
 
         }
@@ -34,7 +36,7 @@ namespace P1x3lc0w.DiscordStarboardBot
 
             foreach(IGrouping<ulong, KeyValuePair<ulong, MessageData>> userMsgGroup in userMessageGroups)
             {
-                long sum = userMsgGroup.Sum(mKv => mKv.Value.stars);
+                long sum = userMsgGroup.Sum(mKv => mKv.Value.GetStarCount());
 
                 if(sum < lastCount)
                 {
