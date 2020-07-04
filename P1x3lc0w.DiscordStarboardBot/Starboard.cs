@@ -9,6 +9,7 @@ namespace P1x3lc0w.DiscordStarboardBot
     internal static class Starboard
     {
         public static IEmote StarboardEmote { get; } = new Emoji("⭐");
+
         public static async Task RescanMessage(GuildData guildData, IUserMessage message, IUserMessage starboardMessage = null)
         {
             if (message.Author.Id == Program.sc.CurrentUser.Id)
@@ -44,7 +45,7 @@ namespace P1x3lc0w.DiscordStarboardBot
                     }
                 }
             });
-            
+
             await CreateOrUpdateStarboardMessage(guildData, starredMessage, messageData);
         }
 
@@ -154,7 +155,7 @@ namespace P1x3lc0w.DiscordStarboardBot
                 .WithUrl(jumpUrl)
                 .WithFooter(footerBuilder);
 
-            if (!string.IsNullOrWhiteSpace(msg.Content))
+            if (!String.IsNullOrWhiteSpace(msg.Content))
             {
                 embed.AddField("Content", msg.Content);
             }
@@ -168,17 +169,19 @@ namespace P1x3lc0w.DiscordStarboardBot
             {
                 if (data.starboardMessageId != null)
                 {
-                    bool isNsfw = (msg.Channel as ITextChannel).IsNsfw;
+                    IUserMessage starboardMessage = await data.GetStarboardMessageAsync(msg);
 
-                    IGuild guild = (msg.Channel as ITextChannel).Guild;
-                    ITextChannel starboardChannel = isNsfw ? await guild.GetTextChannelAsync(guildData.starboardChannelNSFW) : await guild.GetTextChannelAsync(guildData.starboardChannel);
-
-                    IUserMessage startboardMsg = await starboardChannel.GetMessageAsync(data.starboardMessageId.Value) as IUserMessage;
-
-                    await startboardMsg.ModifyAsync((prop) =>
+                    if (starboardMessage != null)
                     {
-                        prop.Embed = CreateStarboardEmbed(msg, data);
-                    });
+                        await starboardMessage.ModifyAsync((prop) =>
+                        {
+                            prop.Embed = CreateStarboardEmbed(msg, data);
+                        });
+                    }
+                    else
+                    {
+                        EnqueueStarboardMessageCreation(guildData, msg, data);
+                    }
                 }
                 else
                 {
@@ -206,7 +209,7 @@ namespace P1x3lc0w.DiscordStarboardBot
 
         internal static async Task<ulong?> CreateStarboardMessage(GuildData guildData, IUserMessage msg, MessageData data)
         {
-            ulong? createdStarboardMsgId = null;
+            ulong? createdStarboardMsgId;
 
             try
             {

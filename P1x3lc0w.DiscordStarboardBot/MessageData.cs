@@ -1,5 +1,7 @@
-﻿using P1x3lc0w.Common;
+﻿using Discord;
+using P1x3lc0w.Common;
 using System;
+using System.Threading.Tasks;
 
 namespace P1x3lc0w.DiscordStarboardBot
 {
@@ -19,6 +21,26 @@ namespace P1x3lc0w.DiscordStarboardBot
         public MessageData()
         {
             StarGivingUsers = new ConcurrentHashSet<ulong>();
+        }
+
+        public async Task<IUserMessage> GetStarboardMessageAsync(IUserMessage msg, GuildData guildData = null)
+        {
+            IGuild guild = (msg.Channel as ITextChannel).Guild;
+
+            if (guildData == null)
+                guildData = Data.BotData.guildDictionary[guild.Id];
+
+            if (starboardMessageStatus != StarboardMessageStatus.CREATED || starboardMessageId == null)
+            {
+                return null;
+            }
+
+            bool isNsfw = (msg.Channel as ITextChannel).IsNsfw;
+
+            
+            ITextChannel starboardChannel = isNsfw ? await guild.GetTextChannelAsync(guildData.starboardChannelNSFW) : await guild.GetTextChannelAsync(guildData.starboardChannel);
+
+            return await starboardChannel.GetMessageAsync(starboardMessageId.Value) as IUserMessage;
         }
     }
 }
