@@ -108,7 +108,7 @@ namespace P1x3lc0w.DiscordStarboardBot
         public static MessageData GetOrAddMessageData(GuildData guildData, IUserMessage starredMessage, IUserMessage starboardMessage = null)
             => guildData.messageData.GetOrAdd(
                     starredMessage.Id,
-                    new MessageData()
+                    new MessageData(starredMessage.Id)
                     {
                         created = starredMessage.CreatedAt,
                         userId = starredMessage.Author.Id,

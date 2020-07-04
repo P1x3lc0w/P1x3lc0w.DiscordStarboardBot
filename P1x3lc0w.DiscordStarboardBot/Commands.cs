@@ -73,6 +73,28 @@ namespace P1x3lc0w.DiscordStarboardBot
             }
         }
 
+        [Command("admin rescanall")]
+        [RequireUserPermission(Discord.GuildPermission.Administrator)]
+        public async Task Scan()
+        {
+            try
+            {
+                GuildData guildData = Data.BotData.guildDictionary[Context.Guild.Id];
+
+                foreach(KeyValuePair<ulong, MessageData> messageDataKV in guildData.messageData)
+                {
+                    IUserMessage message = await messageDataKV.Value.GetMessageAsync(Context.Guild);
+                    await Starboard.RescanMessage(guildData, message, await messageDataKV.Value.GetStarboardMessageAsync(message, guildData));
+                }
+
+                await ReplyAsync("✅ Rescanned all saved messages.");
+            }
+            catch (Exception e)
+            {
+                await HandleException(e);
+            }
+        }
+
         [Command("admin scan")]
         [RequireUserPermission(Discord.GuildPermission.Administrator)]
         public async Task Scan(SocketTextChannel channel, string messageId)

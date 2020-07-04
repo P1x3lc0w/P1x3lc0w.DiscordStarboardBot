@@ -22,6 +22,8 @@ namespace P1x3lc0w.DiscordStarboardBot.Datafixing
                         messageDataKV.Value.starboardMessageStatus = StarboardMessageStatus.CREATED;
                     }
 
+                    messageDataKV.Value.messageId = messageDataKV.Key;
+
                     if(messageDataKV.Value.userId == 622703582801559563)
                     {
                         guildDataKV.Value.messageData.Remove(messageDataKV.Key, out _);

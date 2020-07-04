@@ -11,6 +11,7 @@ namespace P1x3lc0w.DiscordStarboardBot
         public ulong? starboardMessageId;
         public ulong userId;
         public ulong channelId;
+        public ulong messageId;
         public bool isNsfw;
         public DateTimeOffset created;
         public StarboardMessageStatus starboardMessageStatus;
@@ -18,10 +19,14 @@ namespace P1x3lc0w.DiscordStarboardBot
         public int GetStarCount()
             => StarGivingUsers.Count;
 
-        public MessageData()
+        public MessageData(ulong messageId)
         {
             StarGivingUsers = new ConcurrentHashSet<ulong>();
+            this.messageId = messageId;
         }
+
+        public async Task<IUserMessage> GetMessageAsync(IGuild guild)
+            => await (await guild.GetChannelAsync(channelId) as ITextChannel)?.GetMessageAsync(messageId) as IUserMessage;
 
         public async Task<IUserMessage> GetStarboardMessageAsync(IUserMessage msg, GuildData guildData = null)
         {
