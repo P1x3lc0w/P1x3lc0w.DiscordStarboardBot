@@ -17,6 +17,12 @@ namespace P1x3lc0w.DiscordStarboardBot
             await ReplyAsync($":x: An exception occured while handling a command: `{e.GetType().FullName}`");
         }
 
+        private async Task HandleContextException(Exception e)
+        {
+            Program.Log($"Exception in Starboard context while handling command: {e.GetType().FullName}: {e.Message}\n{e.StackTrace}", LogSeverity.Warning);
+            await ReplyAsync($"⚠ An exception occured in Starboard context while handling a command: `{e.GetType().FullName}`");
+        }
+
         [Command("config channel")]
         [RequireUserPermission(Discord.GuildPermission.Administrator)]
         public async Task SetStarboardChannel(SocketTextChannel channel)
@@ -171,7 +177,7 @@ namespace P1x3lc0w.DiscordStarboardBot
                                     {
                                         if (context.Exception != null)
                                         {
-                                            await HandleException(context.Exception);
+                                            await HandleContextException(context.Exception);
                                         }
                                         else
                                         {

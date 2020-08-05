@@ -243,7 +243,7 @@ namespace P1x3lc0w.DiscordStarboardBot
             }
             catch (Exception e)
             {
-                Console.Error.WriteLine($"Error while creating starboard message: {e.GetType().FullName}: {e.Message}");
+                Program.Log($"Error while creating starboard message: {e.GetType().FullName}: {e.Message}", LogSeverity.Error);
                 createdStarboardMsgId = null;
             }
 
