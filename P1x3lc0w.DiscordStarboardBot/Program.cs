@@ -14,6 +14,7 @@ namespace P1x3lc0w.DiscordStarboardBot
     public class Program
     {
         public static DiscordSocketClient sc;
+        private static BotConfig botConfig;
         public static CommandHandler handler;
 
         private static void Main(string[] args)
@@ -46,24 +47,9 @@ namespace P1x3lc0w.DiscordStarboardBot
             ServiceProvider provider = services.BuildServiceProvider();
             _ = provider.GetRequiredService<CommandHandler>().InstallCommandsAsync();
 
-            string token = "";
+            botConfig = BotConfig.ReadConfigFromFile("botconfig.json");
 
-            {
-#if DEBUG
-                Console.WriteLine("DEBUG");
-                byte[] token_enc = Convert.FromBase64String(@"wBVgBhGVlpmboAWxh6WODPFiSDyOLxPskAHmb8Ruk40CjeOBsifAu5JLqNIZUJ3g0q8qiYzyCQmqsAY58lp1Yg==");
-                byte[] iv = Convert.FromBase64String(@"fClcUe7OWzqU8dIOt1u60g==");
-#else
-                Console.WriteLine("RELEASE");
-                byte[] token_enc = Convert.FromBase64String(@"CBFtbeHilk2H1EDrcMst17Fu/07yIZXrmwv2w6Lowu1X9u0pz3UrtbSOQIkFv3eJ+vlOAIb4cug6VoljLvYFlQ==");
-                byte[] iv = Convert.FromBase64String(@"w8Ky3A53CBv/wFLkATG4Lw==");
-#endif
-                byte[] aes_key = Convert.FromBase64String(File.ReadAllText(".key"));
-
-                token = Crypto.DecryptStringFromBytes_Aes(token_enc, aes_key, iv);
-            }
-
-            sc.LoginAsync(Discord.TokenType.Bot, token);
+            sc.LoginAsync(Discord.TokenType.Bot, botConfig.token);
 
             Thread.Sleep(Timeout.Infinite);
         }
