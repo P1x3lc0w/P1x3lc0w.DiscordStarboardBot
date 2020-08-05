@@ -28,7 +28,7 @@ namespace P1x3lc0w.DiscordStarboardBot
                 {
                     if (msgData.Value.userId == userId)
                     {
-                        await Starboard.UpdateStarboardMessage(this, await guild.GetTextChannel(msgData.Value.channelId).GetMessageAsync(msgData.Key) as IUserMessage, msgData.Value);
+                        await Starboard.UpdateStarboardMessage(new StarboardContext(this, msgData.Value));
                     }
                 }
                 catch (Exception e)

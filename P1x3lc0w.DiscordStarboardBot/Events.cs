@@ -60,7 +60,7 @@ namespace P1x3lc0w.DiscordStarboardBot
             {
                 if (msg.Author.Id != arg3.User.Value.Id)
                 {
-                    await Starboard.UpdateStarGivenAsync(msg, arg3.User.Value, false);
+                    await Starboard.UpdateStarGivenAsync(new StarboardContext(msg), arg3.User.Value, false);
                 }
             }
         }
@@ -68,11 +68,6 @@ namespace P1x3lc0w.DiscordStarboardBot
         internal static async Task Sc_ReactionAdded(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
         {
             IUserMessage msg = arg1.Value ?? await arg1.DownloadAsync();
-
-            if(msg.Author.Id == Program.sc.CurrentUser.Id)
-            {
-                return;
-            }
 
             if (arg3.Emote.Name.Equals("⭐", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -82,7 +77,7 @@ namespace P1x3lc0w.DiscordStarboardBot
                 }
                 else
                 {
-                    await Starboard.UpdateStarGivenAsync(msg, arg3.User.Value, true);
+                    await Starboard.UpdateStarGivenAsync(new StarboardContext(msg), arg3.User.Value, true);
                 }
             }
         }

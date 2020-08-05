@@ -87,7 +87,7 @@ namespace P1x3lc0w.DiscordStarboardBot
 
                     if(message != null)
                     {
-                        await Starboard.RescanMessage(guildData, message, await messageDataKV.Value.GetStarboardMessageAsync(message, guildData));
+                        await Starboard.RescanMessage(new StarboardContext(guildData, messageDataKV.Value, message));
                     }
                     else
                     {
@@ -117,14 +117,14 @@ namespace P1x3lc0w.DiscordStarboardBot
                     return;
                 }
 
-                if (!(await channel.GetMessageAsync(msgId) is IUserMessage message))
+                if (await channel.GetMessageAsync(msgId) is IUserMessage message)
                 {
-                    await ReplyAsync(":x: Message Not Found!");
+                    await Starboard.RescanMessage(new StarboardContext(guildData, message, channel));
+                    await ReplyAsync(":white_check_mark: Message Was Scanned!");
                 }
                 else
                 {
-                    await Starboard.RescanMessage(guildData, message);
-                    await ReplyAsync(":white_check_mark: Message Was Scanned!");
+                    await ReplyAsync(":x: Message Not Found!");
                 }
             }
             catch (Exception e)
@@ -159,46 +159,22 @@ namespace P1x3lc0w.DiscordStarboardBot
                             {
                                 if (!usrMsg.Author.IsBot)
                                 {
-                                    await Starboard.RescanMessage(guildData, usrMsg);
+                                    await Starboard.RescanMessage(new StarboardContext(guildData, usrMsg, channel));
                                     rescanCount++;
                                 }
                                 else if (usrMsg.Author.Id == Context.Client.CurrentUser.Id)
                                 {
-                                    IEmbed embed = usrMsg.Embeds.FirstOrDefault();
+                                    MessageData starboardMessageData = StarboardUtil.GetStarboardMessageData(guildData, usrMsg);
 
-                                    if (embed != null)
+                                    if (starboardMessageData != null)
                                     {
-                                        string[] parts = embed.Author?.Url?.Split('/');
-
-                                        if (parts != null)
-                                        {
-                                            ulong channelId = UInt64.Parse(parts[5]);
-                                            ulong msgId = UInt64.Parse(parts[6]);
-
-                                            await ReplyAsync($":information_source: Found starboard message `{msgId}`");
-
-                                            ITextChannel textChannel = Context.Guild.GetTextChannel(channelId);
-
-                                            if (channel != null)
-                                            {
-                                                IUserMessage message = (await textChannel.GetMessageAsync(msgId)) as IUserMessage;
-
-                                                if (message != null)
-                                                {
-                                                    await Starboard.RescanMessage(guildData, message, usrMsg);
-                                                    await ReplyAsync($":white_check_mark: Message `{message.Id}` (for starboard message `{usrMsg.Id}`) was scanned!");
-                                                    rescanCount++;
-                                                }
-                                                else
-                                                {
-                                                    await ReplyAsync($":x: Could not find message `{msgId}`");
-                                                }
-                                            }
-                                            else
-                                            {
-                                                await ReplyAsync($":x: Could not find channel `{channelId}`");
-                                            }
-                                        }
+                                        await Starboard.RescanMessage(new StarboardContext(guildData, starboardMessageData));
+                                        rescanCount += 2;
+                                    }
+                                    else
+                                    {
+                                        await Starboard.RescanMessage(new StarboardContext(guildData, usrMsg, channel));
+                                        rescanCount++;
                                     }
                                 }
                             }
