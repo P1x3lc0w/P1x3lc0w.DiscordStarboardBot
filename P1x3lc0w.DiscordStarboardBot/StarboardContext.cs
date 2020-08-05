@@ -118,6 +118,8 @@ namespace P1x3lc0w.DiscordStarboardBot
 
                 return null;
             }
+
+            set => _starboardTextChannel = value;
         }
 
         public IUserMessage StarredMessage
@@ -160,9 +162,9 @@ namespace P1x3lc0w.DiscordStarboardBot
                     return _messageData;
                 }
 
-                if (GuildData != null && _starredMessage != null)
+                if (GuildData != null && _starredMessage != null && GuildData.messageData.ContainsKey(_starredMessage.Id))
                 {
-                    _messageData = GetOrAddMessageData();
+                    _messageData = GuildData.messageData[_starredMessage.Id];
                     return _messageData;
                 }
 
@@ -215,8 +217,9 @@ namespace P1x3lc0w.DiscordStarboardBot
             return null;
         }
 
-        private MessageData GetOrAddMessageData()
-            => GuildData.messageData.GetOrAdd(
+        public MessageData GetOrAddMessageData()
+        {
+            _messageData = GuildData.messageData.GetOrAdd(
                     _starredMessage.Id,
                     new MessageData(_starredMessage.Id)
                     {
@@ -224,8 +227,12 @@ namespace P1x3lc0w.DiscordStarboardBot
                         userId = _starredMessage.Author.Id,
                         isNsfw = StarredMessageTextChannel.IsNsfw,
                         channelId = StarredMessageTextChannel.Id,
-                        starboardMessageId = _starboardMessage?.Id
+                        starboardMessageId = _starboardMessage?.Id,
+                        starboardMessageStatus = _starboardMessage?.Id != null ? StarboardMessageStatus.CREATED : StarboardMessageStatus.NONE
                     }
                 );
+
+            return _messageData;
+        }
     }
 }

@@ -56,7 +56,7 @@ namespace P1x3lc0w.DiscordStarboardBot
 
         internal static void Exit()
         {
-            Console.WriteLine("Shutting Down....");
+            Log("Shutting Down....");
             Task.Run(ExitAsync);
         }
 
@@ -65,8 +65,81 @@ namespace P1x3lc0w.DiscordStarboardBot
             await sc.LogoutAsync();
             await sc.StopAsync();
 
-            Console.WriteLine("Goodbye!");
+            Log("Goodbye!");
             Environment.Exit(0);
+        }
+
+        private static object _logLock = new object();
+
+        public static void Log(string message, LogSeverity severity = LogSeverity.Info)
+        {
+            lock (_logLock)
+            {
+                Console.BackgroundColor = ConsoleColor.Black;
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+
+                Console.Write($"[{DateTimeOffset.Now}]");
+
+                switch (severity)
+                {
+                    case Discord.LogSeverity.Debug:
+                    case Discord.LogSeverity.Verbose:
+                        Console.ForegroundColor = ConsoleColor.DarkGray;
+                        break;
+
+
+                    case Discord.LogSeverity.Info:
+                        Console.ForegroundColor = ConsoleColor.DarkBlue;
+                        break;
+
+                    case Discord.LogSeverity.Warning:
+                        Console.ForegroundColor = ConsoleColor.DarkYellow;
+                        break;
+
+                    case Discord.LogSeverity.Error:
+                        Console.ForegroundColor = ConsoleColor.DarkRed;
+                        break;
+
+                    case Discord.LogSeverity.Critical:
+                        Console.BackgroundColor = ConsoleColor.Red;
+                        Console.ForegroundColor = ConsoleColor.White;
+                        break;
+                }
+
+                Console.Write($"[{severity}]");
+
+                switch (severity)
+                {
+                    case Discord.LogSeverity.Debug:
+                        Console.ForegroundColor = ConsoleColor.Blue;
+                        break;
+
+                    case Discord.LogSeverity.Verbose:
+                        Console.ForegroundColor = ConsoleColor.Gray;
+                        break;
+
+
+                    case Discord.LogSeverity.Info:
+                        Console.ForegroundColor = ConsoleColor.White;
+                        break;
+
+                    case Discord.LogSeverity.Warning:
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        break;
+
+                    case Discord.LogSeverity.Error:
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        break;
+
+                    case Discord.LogSeverity.Critical:
+                        Console.BackgroundColor = ConsoleColor.Red;
+                        break;
+                }
+
+                Console.Write(' ');
+
+                Console.WriteLine(message);
+            }
         }
     }
 }

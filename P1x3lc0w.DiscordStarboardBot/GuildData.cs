@@ -33,7 +33,7 @@ namespace P1x3lc0w.DiscordStarboardBot
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"Exception while updating starboard message {msgData.Value?.starboardMessageId}: {e.GetType().FullName}: {e.Message}\n{e.StackTrace}");
+                    Program.Log($"Exception while updating starboard message {msgData.Value?.starboardMessageId}: {e.GetType().FullName}: {e.Message}\n{e.StackTrace}", LogSeverity.Error);
                 }
             });
         }

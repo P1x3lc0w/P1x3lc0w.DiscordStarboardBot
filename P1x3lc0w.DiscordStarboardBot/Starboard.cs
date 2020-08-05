@@ -29,6 +29,7 @@ namespace P1x3lc0w.DiscordStarboardBot
         public static async Task UpdateStarsGivenAsync(StarboardContext context, IAsyncEnumerable<IReadOnlyCollection<IUser>> starGivingUsers)
         {
             await context.GetStarredMessageAsync();
+            context.GetOrAddMessageData();
 
             context.MessageData.StarGivingUsers.Clear();
 
@@ -53,6 +54,7 @@ namespace P1x3lc0w.DiscordStarboardBot
         public static async Task UpdateStarsGivenAsync(StarboardContext context, IEnumerable<IUser> starGivingUsers)
         {
             await context.GetStarredMessageAsync();
+            context.GetOrAddMessageData();
 
             context.MessageData.StarGivingUsers.Clear();
 
@@ -74,7 +76,7 @@ namespace P1x3lc0w.DiscordStarboardBot
         public static async Task UpdateStarGivenAsync(StarboardContext context, IUser starGivingUser, bool starGiven)
         {
             //If the starred message was sent by the current bot user...
-            if (starGivingUser.Id == Program.sc.CurrentUser.Id)
+            if ((await context.GetStarredMessageAsync()).Author.Id == Program.sc.CurrentUser.Id)
             {
                 //... check if it is a starboard message
                 StarboardContext starboardContext = await StarboardUtil.GetStarboardContextFromStarboardMessage(context);
@@ -97,6 +99,8 @@ namespace P1x3lc0w.DiscordStarboardBot
 
         private static async Task UpdateStarGivenInternalAsync(StarboardContext context, IUser starGivingUser, bool starGiven)
         {
+            context.GetOrAddMessageData();
+
             if (starGiven)
             {
                 context.MessageData.StarGivingUsers.Add(starGivingUser.Id);
@@ -111,6 +115,8 @@ namespace P1x3lc0w.DiscordStarboardBot
 
         private static async Task CreateOrUpdateStarboardMessage(StarboardContext context)
         {
+            context.GetOrAddMessageData();
+
             if (context.MessageData.starboardMessageStatus == StarboardMessageStatus.CREATED)
             {
                 while (context.MessageData.starboardMessageId == 1)

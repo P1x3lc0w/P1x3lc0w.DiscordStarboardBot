@@ -13,7 +13,7 @@ namespace P1x3lc0w.DiscordStarboardBot
     {
         private async Task HandleException(Exception e)
         {
-            Console.WriteLine($"Exception while handling command: {e.GetType().FullName}: {e.Message}\n{e.StackTrace}");
+            Program.Log($"Exception while handling command: {e.GetType().FullName}: {e.Message}\n{e.StackTrace}", LogSeverity.Error);
             await ReplyAsync($":x: An exception occured while handling a command: `{e.GetType().FullName}`");
         }
 

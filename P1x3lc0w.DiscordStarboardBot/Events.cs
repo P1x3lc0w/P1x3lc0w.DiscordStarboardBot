@@ -14,23 +14,7 @@ namespace P1x3lc0w.DiscordStarboardBot
 
         internal static Task Sc_Log(Discord.LogMessage arg)
         {
-            switch (arg.Severity)
-            {
-                case Discord.LogSeverity.Debug:
-                case Discord.LogSeverity.Verbose:
-                case Discord.LogSeverity.Info:
-                case Discord.LogSeverity.Warning:
-                    Console.WriteLine("[" + arg.Severity.ToString() + "]" + arg.Message);
-                    break;
-
-                case Discord.LogSeverity.Error:
-                    Console.Error.WriteLine("[ERROR] " + arg.Message);
-                    break;
-
-                case Discord.LogSeverity.Critical:
-                    Console.Error.WriteLine("[CRITICAL] " + arg.Message);
-                    break;
-            }
+            Program.Log(arg.Message, arg.Severity);
 
             return Task.CompletedTask;
         }
@@ -44,7 +28,7 @@ namespace P1x3lc0w.DiscordStarboardBot
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Exception while updating starboard message: {e.GetType().FullName}: {e.Message}\n{e.StackTrace}");
+                Program.Log($"Exception while updating starboard message: {e.GetType().FullName}: {e.Message}\n{e.StackTrace}", LogSeverity.Error);
                 return Task.CompletedTask;
             }
 
@@ -84,11 +68,11 @@ namespace P1x3lc0w.DiscordStarboardBot
 
         internal static Task Sc_GuildAvailable(SocketGuild arg)
         {
-            Console.WriteLine($"Guild Available: {arg.Name} ({arg.Id})");
+            Program.Log($"Guild Available: {arg.Name} ({arg.Id})");
 
             if (!Data.BotData.guildDictionary.ContainsKey(arg.Id))
             {
-                Console.WriteLine($"Createing Guild Data for: {arg.Name} ({arg.Id})");
+                Program.Log($"Createing Guild Data for: {arg.Name} ({arg.Id})");
 
                 Data.BotData.guildDictionary.TryAdd(arg.Id, new GuildData());
             }

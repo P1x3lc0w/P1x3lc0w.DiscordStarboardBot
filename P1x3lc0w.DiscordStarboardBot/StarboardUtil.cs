@@ -20,10 +20,12 @@ namespace P1x3lc0w.DiscordStarboardBot
                     ulong channelId = UInt64.Parse(parts[5]);
                     ulong messageId = UInt64.Parse(parts[6]);
 
+                    context.StarboardTextChannel = context.StarredMessageTextChannel;
                     context.StarredMessageTextChannel = (await context.Guild.GetChannelAsync(channelId)) as ITextChannel;
 
                     if(context.StarredMessageTextChannel != null)
                     {
+                        context.StarboardMessage = context.StarredMessage;
                         context.StarredMessage = await context.StarredMessageTextChannel.GetMessageAsync(messageId) as IUserMessage;
 
                         if (context.StarredMessage == null)
