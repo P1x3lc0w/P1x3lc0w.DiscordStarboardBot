@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Threading.Tasks;
 
 namespace P1x3lc0w.DiscordStarboardBot
@@ -164,12 +165,19 @@ namespace P1x3lc0w.DiscordStarboardBot
                                 }
                                 else if (usrMsg.Author.Id == Context.Client.CurrentUser.Id)
                                 {
-                                    MessageData starboardMessageData = StarboardUtil.GetStarboardMessageData(guildData, usrMsg);
+                                    StarboardContext context = await StarboardUtil.GetStarboardContextFromStarboardMessage(new StarboardContext(guildData, usrMsg, channel));
 
-                                    if (starboardMessageData != null)
+                                    if (context != null)
                                     {
-                                        await Starboard.RescanMessage(new StarboardContext(guildData, starboardMessageData));
-                                        rescanCount += 2;
+                                        if (context.Exception != null)
+                                        {
+                                            await HandleException(context.Exception);
+                                        }
+                                        else
+                                        {
+                                            await Starboard.RescanMessage(context);
+                                            rescanCount += 2;
+                                        } 
                                     }
                                     else
                                     {

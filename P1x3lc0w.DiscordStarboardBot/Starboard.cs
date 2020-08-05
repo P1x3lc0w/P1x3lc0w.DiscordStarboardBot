@@ -73,20 +73,21 @@ namespace P1x3lc0w.DiscordStarboardBot
 
         public static async Task UpdateStarGivenAsync(StarboardContext context, IUser starGivingUser, bool starGiven)
         {
-            MessageData messageData;
-
             //If the starred message was sent by the current bot user...
             if (starGivingUser.Id == Program.sc.CurrentUser.Id)
             {
                 //... check if it is a starboard message
-                messageData = StarboardUtil.GetStarboardMessageData(context.GuildData, await context.GetStarredMessageAsync());
+                StarboardContext starboardContext = await StarboardUtil.GetStarboardContextFromStarboardMessage(context);
 
-                if(messageData != null)
+                if(starboardContext != null)
                 {
-                    context.MessageData = messageData;
-                    context.ResetStarredMessage();
+                    if(context.Exception != null)
+                    {
+                        //We should probably delete the broken starboard message, ignore for now.
+                        return;
+                    }
 
-                    await UpdateStarGivenInternalAsync(context, starGivingUser, starGiven);
+                    await UpdateStarGivenInternalAsync(starboardContext, starGivingUser, starGiven);
                     return;
                 }
             }

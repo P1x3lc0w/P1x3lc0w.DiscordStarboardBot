@@ -1,18 +1,15 @@
 ﻿using Discord;
-using Discord.WebSocket;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace P1x3lc0w.DiscordStarboardBot
 {
     internal static class StarboardUtil
     {
-        internal static MessageData GetStarboardMessageData(GuildData guildData, IUserMessage starredMessage)
+        internal static async Task<StarboardContext> GetStarboardContextFromStarboardMessage(StarboardContext context)
         {
-            IEmbed embed = starredMessage.Embeds.FirstOrDefault();
+            IEmbed embed = (await context.GetStarredMessageAsync()).Embeds.FirstOrDefault();
 
             if (embed != null)
             {
@@ -20,16 +17,26 @@ namespace P1x3lc0w.DiscordStarboardBot
 
                 if (parts != null && parts.Length > 6)
                 {
-                    ulong msgId = UInt64.Parse(parts[6]);
+                    ulong channelId = UInt64.Parse(parts[5]);
+                    ulong messageId = UInt64.Parse(parts[6]);
 
-                    if (guildData.messageData.ContainsKey(msgId))
+                    context.StarredMessageTextChannel = (await context.Guild.GetChannelAsync(channelId)) as ITextChannel;
+
+                    if(context.StarredMessageTextChannel != null)
                     {
-                        return guildData.messageData[msgId];
+                        context.StarredMessage = await context.StarredMessageTextChannel.GetMessageAsync(messageId) as IUserMessage;
+
+                        if (context.StarredMessage == null)
+                        {
+                            context.Exception = new NullReferenceException("StarredMessage was null (deleted or not found).");
+                        }
                     }
                     else
                     {
-                        throw new KeyNotFoundException($"Message data missing for message {msgId}");
+                        context.Exception = new NullReferenceException("StarredMessageTextChannel was null (deleted or not found).");
                     }
+
+                    return context;
                 }
             }
 

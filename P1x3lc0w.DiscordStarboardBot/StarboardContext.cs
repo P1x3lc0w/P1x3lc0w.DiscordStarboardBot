@@ -1,4 +1,5 @@
 ﻿using Discord;
+using System;
 using System.Threading.Tasks;
 
 namespace P1x3lc0w.DiscordStarboardBot
@@ -25,6 +26,15 @@ namespace P1x3lc0w.DiscordStarboardBot
             this._messageData = messageData;
         }
 
+        public StarboardContext(GuildData guildData, IUserMessage starredMessage, ITextChannel starredMessageTextChannel, IUserMessage starboardMessage, ITextChannel starboardTextChannel)
+        {
+            this._guildData = guildData;
+            this._starredMessage = starredMessage;
+            this._starredMessageTextChannel = starredMessageTextChannel;
+            this._starboardMessage = starboardMessage;
+            this._starboardTextChannel = starboardTextChannel;
+        }
+
         public StarboardContext(GuildData guildData, MessageData messageData, IUserMessage starredMessage)
         {
             this._guildData = guildData;
@@ -39,6 +49,12 @@ namespace P1x3lc0w.DiscordStarboardBot
             this._starredMessageTextChannel = starredMessageTextChannel;
         }
 
+        public StarboardContext(GuildData guildData, IUserMessage starredMessage)
+        {
+            this._guildData = guildData;
+            this._starredMessage = starredMessage;
+        }
+
         public IGuild Guild
         {
             get
@@ -48,13 +64,13 @@ namespace P1x3lc0w.DiscordStarboardBot
                     return _guild;
                 }
 
-                if (_starredMessageTextChannel != null)
+                if (StarredMessageTextChannel != null)
                 {
                     _guild = _starredMessageTextChannel.Guild;
                     return _guild;
                 }
 
-                if (_starboardTextChannel != null)
+                if (StarboardTextChannel != null)
                 {
                     _guild = _starboardTextChannel.Guild;
                     return _guild;
@@ -81,6 +97,8 @@ namespace P1x3lc0w.DiscordStarboardBot
 
                 return null;
             }
+
+            set => _starredMessageTextChannel = value;
         }
 
         public ITextChannel StarboardTextChannel
@@ -112,48 +130,6 @@ namespace P1x3lc0w.DiscordStarboardBot
         {
             get => _starboardMessage;
             set => _starboardMessage = value;
-        }
-
-        public async Task<IUserMessage> GetStarredMessageAsync()
-        {
-            if (_starredMessage != null)
-            {
-                return _starredMessage;
-            }
-
-            if (Guild != null)
-            {
-                _starredMessage = await _messageData.GetMessageAsync(Guild);
-                return _starredMessage;
-            }
-
-            return null;
-        }
-
-        public void ResetStarredMessage()
-        {
-            _starredMessage = null;
-        }
-
-        public void ResetStarboardMessage()
-        {
-            _starboardMessage = null;
-        }
-
-        public async Task<IUserMessage> GetStarboardMessageAsync()
-        {
-            if (_starredMessage != null)
-            {
-                return _starboardMessage;
-            }
-
-            if (Guild != null)
-            {
-                _starboardMessage = await _messageData.GetStarboardMessageAsync(await GetStarredMessageAsync(), GuildData);
-                return _starboardMessage;
-            }
-
-            return null;
         }
 
         public GuildData GuildData
@@ -193,6 +169,50 @@ namespace P1x3lc0w.DiscordStarboardBot
                 return null;
             }
             set => _messageData = value;
+        }
+
+        public Exception Exception { get; set; }
+
+        public async Task<IUserMessage> GetStarredMessageAsync()
+        {
+            if (_starredMessage != null)
+            {
+                return _starredMessage;
+            }
+
+            if (Guild != null && _messageData != null)
+            {
+                _starredMessage = await _messageData.GetMessageAsync(Guild);
+                return _starredMessage;
+            }
+
+            return null;
+        }
+
+        public void ResetStarredMessage()
+        {
+            _starredMessage = null;
+        }
+
+        public void ResetStarboardMessage()
+        {
+            _starboardMessage = null;
+        }
+
+        public async Task<IUserMessage> GetStarboardMessageAsync()
+        {
+            if (_starboardMessage != null)
+            {
+                return _starboardMessage;
+            }
+
+            if (Guild != null)
+            {
+                _starboardMessage = await _messageData.GetStarboardMessageAsync(await GetStarredMessageAsync(), GuildData);
+                return _starboardMessage;
+            }
+
+            return null;
         }
 
         private MessageData GetOrAddMessageData()
