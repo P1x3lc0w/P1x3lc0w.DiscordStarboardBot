@@ -146,7 +146,7 @@ namespace P1x3lc0w.DiscordStarboardBot
                 .WithUrl(jumpUrl);
 
             EmbedFooterBuilder footerBuilder = new EmbedFooterBuilder()
-                .WithText($"⭐{messageData.GetStarCount()} • {messageData.created:yyyy-MM-dd HH:mm:ss zzz}");
+                .WithText($"⭐{messageData.GetStarCount()} • #{msg.Channel.Name} • 📅{messageData.created:yyyy-MM-dd HH:mm:ss zzz}");
 
             EmbedBuilder embed = new EmbedBuilder()
                 .WithAuthor(authorBuilder)
