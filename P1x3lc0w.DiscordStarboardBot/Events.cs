@@ -51,19 +51,27 @@ namespace P1x3lc0w.DiscordStarboardBot
 
         internal static async Task Sc_ReactionAdded(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
         {
-            IUserMessage msg = arg1.Value ?? await arg1.DownloadAsync();
-
-            if (arg3.Emote.Name.Equals("⭐", StringComparison.InvariantCultureIgnoreCase))
+            try
             {
-                if (msg.Author.Id == arg3.User.Value.Id)
+                IUserMessage msg = arg1.Value ?? await arg1.DownloadAsync();
+
+                if (arg3.Emote.Name.Equals("⭐", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    await msg.RemoveReactionAsync(arg3.Emote, arg3.User.Value);
-                }
-                else
-                {
-                    await Starboard.UpdateStarGivenAsync(new StarboardContext(StarboardContextType.REACTION_ADDED, msg), arg3.User.Value, true);
+                    if (msg.Author.Id == arg3.User.Value.Id)
+                    {
+                        await msg.RemoveReactionAsync(arg3.Emote, arg3.User.Value);
+                    }
+                    else
+                    {
+                        await Starboard.UpdateStarGivenAsync(new StarboardContext(StarboardContextType.REACTION_ADDED, msg), arg3.User.Value, true);
+                    }
                 }
             }
+            catch(Exception ex)
+            {
+                Program.Log($"Exception in Sc_ReactionAdded {ex.GetType().FullName}: {ex.Message}\n{ex.StackTrace}", LogSeverity.Error);
+            }
+            
         }
 
         internal static Task Sc_GuildAvailable(SocketGuild arg)

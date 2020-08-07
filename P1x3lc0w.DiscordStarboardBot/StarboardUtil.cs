@@ -27,6 +27,7 @@ namespace P1x3lc0w.DiscordStarboardBot
                     {
                         context.StarboardMessage = context.StarredMessage;
                         context.StarredMessage = await context.StarredMessageTextChannel.GetMessageAsync(messageId) as IUserMessage;
+                        context.Source = StarboardSource.STARBOARD_MESSAGE;
 
                         if (context.StarredMessage == null)
                         {

@@ -62,6 +62,7 @@ namespace P1x3lc0w.DiscordStarboardBot
         }
 
         public StarboardContextType ContextType { get; private set; }
+        public StarboardSource Source { get; set; }
 
         public IGuild Guild
         {
@@ -198,6 +199,29 @@ namespace P1x3lc0w.DiscordStarboardBot
 
             return null;
         }
+
+        public async Task RemoveReactionAsync(IUser user, StarboardSource source = StarboardSource.UNKNOWN)
+        {
+            if (source == StarboardSource.UNKNOWN)
+                source = Source;
+
+            switch(source)
+            {
+                case StarboardSource.STARBOARD_MESSAGE:
+                    await (await GetStarboardMessageAsync()).RemoveReactionAsync(Starboard.StarboardEmote, user);
+                    break;
+
+                case StarboardSource.STARRED_MESSAGE:
+                    await (await GetStarredMessageAsync()).RemoveReactionAsync(Starboard.StarboardEmote, user);
+                    break;
+
+                default:
+                    throw new NotSupportedException();
+            };
+        }
+
+        public async Task RemoveReactionFromStarboardMessageAsync(IUser user)
+            => await (await GetStarboardMessageAsync()).RemoveReactionAsync(Starboard.StarboardEmote, user);
 
         public void ResetStarredMessage()
         {

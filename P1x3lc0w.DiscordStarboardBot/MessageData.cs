@@ -1,13 +1,14 @@
 ﻿using Discord;
 using P1x3lc0w.Common;
 using System;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 
 namespace P1x3lc0w.DiscordStarboardBot
 {
     internal class MessageData
     {
-        public ConcurrentHashSet<ulong> StarGivingUsers { get; private set; }
+        public StarGivingUsersList StarGivingUsers { get; private set; }
         public ulong? starboardMessageId;
         public ulong userId;
         public ulong channelId;
@@ -17,11 +18,11 @@ namespace P1x3lc0w.DiscordStarboardBot
         public StarboardMessageStatus starboardMessageStatus;
 
         public int GetStarCount()
-            => StarGivingUsers.Count;
+            => StarGivingUsers.Count();
 
         public MessageData(ulong messageId)
         {
-            StarGivingUsers = new ConcurrentHashSet<ulong>();
+            StarGivingUsers = new StarGivingUsersList();
             this.messageId = messageId;
         }
 

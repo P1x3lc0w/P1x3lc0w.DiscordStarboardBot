@@ -16,10 +16,4 @@
     <ProjectReference Include="..\Submodules\P1x3lc0w.Extensions\P1x3lc0w.Extensions\P1x3lc0w.Extensions.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update=".key">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>

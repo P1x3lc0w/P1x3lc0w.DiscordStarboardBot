@@ -16,61 +16,61 @@ namespace P1x3lc0w.DiscordStarboardBot
 
             if (context.StarredMessage.Author.Id == Program.sc.CurrentUser.Id)
             {
-                if (context.GuildData.messageData.ContainsKey(context.StarredMessage.Id))
+                StarboardContext starboardContext = await StarboardUtil.GetStarboardContextFromStarboardMessage(context);
+
+                if (starboardContext != null)
                 {
-                    context.GuildData.messageData.TryRemove(context.StarredMessage.Id, out _);
+                    if (context.Exception != null)
+                    {
+                        //We should probably delete the broken starboard message, ignore for now.
+                        return;
+                    }
+
+                    await UpdateStarsGivenAsync(starboardContext);
+                    return;
                 }
-                return;
             }
 
-            await UpdateStarsGivenAsync(context, context.StarredMessage.GetReactionUsersAsync(StarboardEmote, 5000));
+            await UpdateStarsGivenAsync(context);
         }
 
-        public static async Task UpdateStarsGivenAsync(StarboardContext context, IAsyncEnumerable<IReadOnlyCollection<IUser>> starGivingUsers)
+        public static async Task UpdateStarsGivenAsync(StarboardContext context)
         {
             await context.GetStarredMessageAsync();
             context.GetOrAddMessageData();
 
             context.MessageData.StarGivingUsers.Clear();
 
-            await starGivingUsers.ForEachAsync(users =>
+            await UpdateStarsGivenInternalAsync(context, StarboardSource.STARRED_MESSAGE, (await context.GetStarredMessageAsync()).GetReactionUsersAsync(StarboardEmote, 5000));
+
+            if(await context.GetStarboardMessageAsync() != null)
+            {
+                await UpdateStarsGivenInternalAsync(context, StarboardSource.STARBOARD_MESSAGE, context.StarboardMessage.GetReactionUsersAsync(StarboardEmote, 5000));
+            }
+            
+
+            await CreateOrUpdateStarboardMessage(context);
+        }
+
+        private static async Task UpdateStarsGivenInternalAsync(StarboardContext context, StarboardSource source, IAsyncEnumerable<IReadOnlyCollection<IUser>> starGivingUsers)
+        {
+            await starGivingUsers.ForEachAsync(async users =>
             {
                 foreach (IUser user in users)
                 {
                     if (user.Id != context.StarredMessage.Author.Id)
                     {
-                        context.MessageData.StarGivingUsers.Add(user.Id);
+                        if (!context.MessageData.StarGivingUsers.AddOrUpdate(user.Id, context.Source, StarboardSource.STARRED_MESSAGE))
+                        {
+                            await context.RemoveReactionFromStarboardMessageAsync(user);
+                        }
                     }
                     else
                     {
-                        context.StarredMessage.RemoveReactionAsync(StarboardEmote, user);
+                        await context.RemoveReactionAsync(user, source);
                     }
                 }
             });
-
-            await CreateOrUpdateStarboardMessage(context);
-        }
-
-        public static async Task UpdateStarsGivenAsync(StarboardContext context, IEnumerable<IUser> starGivingUsers)
-        {
-            await context.GetStarredMessageAsync();
-            context.GetOrAddMessageData();
-
-            context.MessageData.StarGivingUsers.Clear();
-
-            foreach (IUser user in starGivingUsers)
-            {
-                if (user.Id != context.StarredMessage.Author.Id)
-                {
-                    context.MessageData.StarGivingUsers.Add(user.Id);
-                }
-                else
-                {
-                    await context.StarredMessage.RemoveReactionAsync(StarboardEmote, user);
-                }
-            }
-
-            await CreateOrUpdateStarboardMessage(context);
         }
 
         public static async Task UpdateStarGivenAsync(StarboardContext context, IUser starGivingUser, bool starGiven)
@@ -81,9 +81,9 @@ namespace P1x3lc0w.DiscordStarboardBot
                 //... check if it is a starboard message
                 StarboardContext starboardContext = await StarboardUtil.GetStarboardContextFromStarboardMessage(context);
 
-                if(starboardContext != null)
+                if (starboardContext != null)
                 {
-                    if(context.Exception != null)
+                    if (context.Exception != null)
                     {
                         //We should probably delete the broken starboard message, ignore for now.
                         return;
@@ -94,6 +94,8 @@ namespace P1x3lc0w.DiscordStarboardBot
                 }
             }
 
+            context.Source = StarboardSource.STARRED_MESSAGE;
+
             await UpdateStarGivenInternalAsync(context, starGivingUser, starGiven);
         }
 
@@ -101,13 +103,22 @@ namespace P1x3lc0w.DiscordStarboardBot
         {
             context.GetOrAddMessageData();
 
+            if (starGivingUser.Id == (await context.GetStarredMessageAsync()).Author.Id)
+            {
+                await context.RemoveReactionAsync(starGivingUser);
+                return;
+            }
+
             if (starGiven)
             {
-                context.MessageData.StarGivingUsers.Add(starGivingUser.Id);
+                if (!context.MessageData.StarGivingUsers.AddOrUpdate(starGivingUser.Id, context.Source, StarboardSource.STARRED_MESSAGE))
+                {
+                    await context.RemoveReactionFromStarboardMessageAsync(starGivingUser);
+                }
             }
             else
             {
-                context.MessageData.StarGivingUsers.Remove(starGivingUser.Id);
+                context.MessageData.StarGivingUsers.Remove(starGivingUser.Id, context.Source);
             }
 
             await CreateOrUpdateStarboardMessage(context);
@@ -132,11 +143,9 @@ namespace P1x3lc0w.DiscordStarboardBot
             }
         }
 
-        
-
         public static Embed CreateStarboardEmbed(StarboardContext context)
         {
-            string avatarUrl = 
+            string avatarUrl =
                 context.StarredMessage.Author.GetAvatarUrl() ??
                 context.StarredMessage.Author.GetDefaultAvatarUrl();
 
@@ -164,7 +173,7 @@ namespace P1x3lc0w.DiscordStarboardBot
                 .WithUrl(jumpUrl);
 
             EmbedFooterBuilder footerBuilder = new EmbedFooterBuilder()
-                .WithText($"⭐{context.MessageData.GetStarCount()} • #{context.StarredMessage.Channel.Name} • 📅{context.MessageData.created:yyyy-MM-dd HH:mm:ss zzz} • ({(int)context.ContextType})");
+                .WithText($"⭐{context.MessageData.GetStarCount()} • #{context.StarredMessage.Channel.Name} • 📅{context.MessageData.created:yyyy-MM-dd} 🕑{context.MessageData.created:HH:mm} • ({(int)context.ContextType})");
 
             EmbedBuilder embed = new EmbedBuilder()
                 .WithAuthor(authorBuilder)
@@ -234,8 +243,8 @@ namespace P1x3lc0w.DiscordStarboardBot
                 bool isNsfw = context.StarredMessageTextChannel.IsNsfw;
 
                 IGuild guild = context.StarredMessageTextChannel.Guild;
-                ITextChannel starboardChannel = isNsfw ? 
-                    await guild.GetTextChannelAsync(context.GuildData.starboardChannelNSFW) : 
+                ITextChannel starboardChannel = isNsfw ?
+                    await guild.GetTextChannelAsync(context.GuildData.starboardChannelNSFW) :
                     await guild.GetTextChannelAsync(context.GuildData.starboardChannel);
 
                 IUserMessage starboardMsg = await starboardChannel.SendMessageAsync(embed: CreateStarboardEmbed(context));

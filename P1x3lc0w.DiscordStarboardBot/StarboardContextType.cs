@@ -6,6 +6,7 @@ namespace P1x3lc0w.DiscordStarboardBot
 {
     public enum StarboardContextType
     {
+        UNKNOWN,
         REACTION_ADDED,
         REACTION_REMOVED,
         COMMAND_RESCANALL,
