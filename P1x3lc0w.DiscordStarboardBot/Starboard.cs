@@ -60,7 +60,7 @@ namespace P1x3lc0w.DiscordStarboardBot
                 {
                     if (user.Id != context.StarredMessage.Author.Id)
                     {
-                        if (!context.MessageData.StarGivingUsers.AddOrUpdate(user.Id, context.Source, StarboardSource.STARRED_MESSAGE))
+                        if (!context.MessageData.StarGivingUsers.AddOrUpdate(user.Id, source, StarboardSource.STARRED_MESSAGE))
                         {
                             await context.RemoveReactionFromStarboardMessageAsync(user);
                         }

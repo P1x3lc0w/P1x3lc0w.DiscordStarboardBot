@@ -23,29 +23,41 @@ namespace P1x3lc0w.DiscordStarboardBot
         {
             try
             {
-                Data.BotData.guildDictionary[arg2.Guild.Id].UpdateMessagesByUser(arg2.Guild, arg2.Id);
+                if (arg1.Username != arg2.Username ||
+                    arg1.Discriminator != arg2.Discriminator ||
+                    arg1.AvatarId != arg2.AvatarId)
+                {
+                    Data.BotData.guildDictionary[arg2.Guild.Id].UpdateMessagesByUser(arg2.Guild, arg2.Id);
+                }
+
                 return Task.CompletedTask;
             }
             catch (Exception e)
             {
-                Program.Log($"Exception while updating starboard message: {e.GetType().FullName}: {e.Message}\n{e.StackTrace}", LogSeverity.Error);
+                Program.Log($"Exception in Sc_GuildMemberUpdated: {e.GetType().FullName}: {e.Message}\n{e.StackTrace}", LogSeverity.Error);
                 return Task.CompletedTask;
             }
-
         }
 
         internal static Task Sc_Ready() => Task.CompletedTask;
 
         internal static async Task Sc_ReactionRemoved(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
         {
-            IUserMessage msg = arg1.Value ?? await arg1.DownloadAsync();
-
-            if (arg3.Emote.Name.Equals("⭐", StringComparison.InvariantCultureIgnoreCase))
+            try
             {
-                if (msg.Author.Id != arg3.User.Value.Id)
+                IUserMessage msg = arg1.Value ?? await arg1.DownloadAsync();
+
+                if (arg3.Emote.Name.Equals("⭐", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    await Starboard.UpdateStarGivenAsync(new StarboardContext(StarboardContextType.REACTION_REMOVED, msg), arg3.User.Value, false);
+                    if (msg.Author.Id != arg3.User.Value.Id)
+                    {
+                        await Starboard.UpdateStarGivenAsync(new StarboardContext(StarboardContextType.REACTION_REMOVED, msg), arg3.User.Value, false);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Program.Log($"Exception in Sc_ReactionRemoved {ex.GetType().FullName}: {ex.Message}\n{ex.StackTrace}", LogSeverity.Error);
             }
         }
 
@@ -67,41 +79,56 @@ namespace P1x3lc0w.DiscordStarboardBot
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Program.Log($"Exception in Sc_ReactionAdded {ex.GetType().FullName}: {ex.Message}\n{ex.StackTrace}", LogSeverity.Error);
             }
-            
         }
 
         internal static Task Sc_GuildAvailable(SocketGuild arg)
         {
-            Program.Log($"Guild Available: {arg.Name} ({arg.Id})");
-
-            if (!Data.BotData.guildDictionary.ContainsKey(arg.Id))
+            try
             {
-                Program.Log($"Createing Guild Data for: {arg.Name} ({arg.Id})");
+                Program.Log($"Guild Available: {arg.Name} ({arg.Id})");
 
-                Data.BotData.guildDictionary.TryAdd(arg.Id, new GuildData());
+                if (!Data.BotData.guildDictionary.ContainsKey(arg.Id))
+                {
+                    Program.Log($"Createing Guild Data for: {arg.Name} ({arg.Id})");
+
+                    Data.BotData.guildDictionary.TryAdd(arg.Id, new GuildData());
+                }
+
+                return Task.CompletedTask;
             }
-
-            return Task.CompletedTask;
+            catch (Exception ex)
+            {
+                Program.Log($"Exception in Sc_GuildAvailable {ex.GetType().FullName}: {ex.Message}\n{ex.StackTrace}", LogSeverity.Error);
+                throw;
+            }
         }
 
         internal static Task Sc_LoggedIn()
         {
-            Program.sc.StartAsync();
-
-            Task.Run(async () =>
+            try
             {
-                while (true)
-                {
-                    await Saving.SaveDataAsync(Data.BotData);
-                    await Task.Delay(new TimeSpan(0, 2, 0, 0, 0));
-                }
-            });
+                Program.sc.StartAsync();
 
-            return Task.CompletedTask;
+                Task.Run(async () =>
+                {
+                    while (true)
+                    {
+                        await Saving.SaveDataAsync(Data.BotData);
+                        await Task.Delay(new TimeSpan(0, 2, 0, 0, 0));
+                    }
+                });
+
+                return Task.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                Program.Log($"Exception in Sc_LoggedIn {ex.GetType().FullName}: {ex.Message}\n{ex.StackTrace}", LogSeverity.Error);
+                throw;
+            }
         }
     }
 }
