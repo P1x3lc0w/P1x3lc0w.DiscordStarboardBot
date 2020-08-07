@@ -44,7 +44,7 @@ namespace P1x3lc0w.DiscordStarboardBot
             {
                 if (msg.Author.Id != arg3.User.Value.Id)
                 {
-                    await Starboard.UpdateStarGivenAsync(new StarboardContext(msg), arg3.User.Value, false);
+                    await Starboard.UpdateStarGivenAsync(new StarboardContext(StarboardContextType.REACTION_REMOVED, msg), arg3.User.Value, false);
                 }
             }
         }
@@ -61,7 +61,7 @@ namespace P1x3lc0w.DiscordStarboardBot
                 }
                 else
                 {
-                    await Starboard.UpdateStarGivenAsync(new StarboardContext(msg), arg3.User.Value, true);
+                    await Starboard.UpdateStarGivenAsync(new StarboardContext(StarboardContextType.REACTION_ADDED, msg), arg3.User.Value, true);
                 }
             }
         }

@@ -94,7 +94,7 @@ namespace P1x3lc0w.DiscordStarboardBot
 
                     if(message != null)
                     {
-                        await Starboard.RescanMessage(new StarboardContext(guildData, messageDataKV.Value, message));
+                        await Starboard.RescanMessage(new StarboardContext(StarboardContextType.COMMAND_RESCANALL, guildData, messageDataKV.Value, message));
                     }
                     else
                     {
@@ -126,7 +126,7 @@ namespace P1x3lc0w.DiscordStarboardBot
 
                 if (await channel.GetMessageAsync(msgId) is IUserMessage message)
                 {
-                    await Starboard.RescanMessage(new StarboardContext(guildData, message, channel));
+                    await Starboard.RescanMessage(new StarboardContext(StarboardContextType.COMMAND_SCAN, guildData, message, channel));
                     await ReplyAsync(":white_check_mark: Message Was Scanned!");
                 }
                 else
@@ -166,12 +166,12 @@ namespace P1x3lc0w.DiscordStarboardBot
                             {
                                 if (!usrMsg.Author.IsBot)
                                 {
-                                    await Starboard.RescanMessage(new StarboardContext(guildData, usrMsg, channel));
+                                    await Starboard.RescanMessage(new StarboardContext(StarboardContextType.COMMANMD_REDISCOVER, guildData, usrMsg, channel));
                                     rescanCount++;
                                 }
                                 else if (usrMsg.Author.Id == Context.Client.CurrentUser.Id)
                                 {
-                                    StarboardContext context = await StarboardUtil.GetStarboardContextFromStarboardMessage(new StarboardContext(guildData, usrMsg, channel));
+                                    StarboardContext context = await StarboardUtil.GetStarboardContextFromStarboardMessage(new StarboardContext(StarboardContextType.COMMANMD_REDISCOVER, guildData, usrMsg, channel));
 
                                     if (context != null)
                                     {
@@ -187,7 +187,7 @@ namespace P1x3lc0w.DiscordStarboardBot
                                     }
                                     else
                                     {
-                                        await Starboard.RescanMessage(new StarboardContext(guildData, usrMsg, channel));
+                                        await Starboard.RescanMessage(new StarboardContext(StarboardContextType.COMMANMD_REDISCOVER, guildData, usrMsg, channel));
                                         rescanCount++;
                                     }
                                 }

@@ -164,7 +164,7 @@ namespace P1x3lc0w.DiscordStarboardBot
                 .WithUrl(jumpUrl);
 
             EmbedFooterBuilder footerBuilder = new EmbedFooterBuilder()
-                .WithText($"⭐{context.MessageData.GetStarCount()} • #{context.StarredMessage.Channel.Name} • 📅{context.MessageData.created:yyyy-MM-dd HH:mm:ss zzz}");
+                .WithText($"⭐{context.MessageData.GetStarCount()} • #{context.StarredMessage.Channel.Name} • 📅{context.MessageData.created:yyyy-MM-dd HH:mm:ss zzz} • ({(int)context.ContextType})");
 
             EmbedBuilder embed = new EmbedBuilder()
                 .WithAuthor(authorBuilder)

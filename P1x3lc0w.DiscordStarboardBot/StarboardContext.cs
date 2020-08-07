@@ -15,19 +15,22 @@ namespace P1x3lc0w.DiscordStarboardBot
         private GuildData _guildData;
         private MessageData _messageData;
 
-        public StarboardContext(IUserMessage starredMessage)
+        public StarboardContext(StarboardContextType contextType, IUserMessage starredMessage)
         {
+            ContextType = contextType;
             this._starredMessage = starredMessage;
         }
 
-        public StarboardContext(GuildData guildData, MessageData messageData)
+        public StarboardContext(StarboardContextType contextType, GuildData guildData, MessageData messageData)
         {
+            ContextType = contextType;
             this._guildData = guildData;
             this._messageData = messageData;
         }
 
-        public StarboardContext(GuildData guildData, IUserMessage starredMessage, ITextChannel starredMessageTextChannel, IUserMessage starboardMessage, ITextChannel starboardTextChannel)
+        public StarboardContext(StarboardContextType contextType, GuildData guildData, IUserMessage starredMessage, ITextChannel starredMessageTextChannel, IUserMessage starboardMessage, ITextChannel starboardTextChannel)
         {
+            ContextType = contextType;
             this._guildData = guildData;
             this._starredMessage = starredMessage;
             this._starredMessageTextChannel = starredMessageTextChannel;
@@ -35,25 +38,30 @@ namespace P1x3lc0w.DiscordStarboardBot
             this._starboardTextChannel = starboardTextChannel;
         }
 
-        public StarboardContext(GuildData guildData, MessageData messageData, IUserMessage starredMessage)
+        public StarboardContext(StarboardContextType contextType, GuildData guildData, MessageData messageData, IUserMessage starredMessage)
         {
+            ContextType = contextType;
             this._guildData = guildData;
             this._messageData = messageData;
             this._starredMessage = starredMessage;
         }
 
-        public StarboardContext(GuildData guildData, IUserMessage starredMessage, ITextChannel starredMessageTextChannel)
+        public StarboardContext(StarboardContextType contextType, GuildData guildData, IUserMessage starredMessage, ITextChannel starredMessageTextChannel)
         {
+            ContextType = contextType;
             this._guildData = guildData;
             this._starredMessage = starredMessage;
             this._starredMessageTextChannel = starredMessageTextChannel;
         }
 
-        public StarboardContext(GuildData guildData, IUserMessage starredMessage)
+        public StarboardContext(StarboardContextType contextType, GuildData guildData, IUserMessage starredMessage)
         {
+            ContextType = contextType;
             this._guildData = guildData;
             this._starredMessage = starredMessage;
         }
+
+        public StarboardContextType ContextType { get; private set; }
 
         public IGuild Guild
         {
